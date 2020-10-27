@@ -13,5 +13,5 @@ router.use((req, res, next) => {
 })
 
 router.post('/login', auth.login)
-
+router.post('/register',auth.register);
 module.exports = router;
