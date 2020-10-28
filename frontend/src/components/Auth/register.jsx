@@ -8,7 +8,7 @@ import Grid from '@material-ui/core/Grid';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/styles';
 import { Link as RRDLink } from 'react-router-dom';
-import { MenuItem } from '@material-ui/core';
+import { MenuItem, Hidden } from '@material-ui/core';
 import { ThemeContext } from '../../context/useTheme';
 import { Fab } from '@material-ui/core';
 import { Brightness4, Brightness7 } from '@material-ui/icons'
@@ -26,14 +26,19 @@ const useStyles = makeStyles((theme) => ({
     backgroundPosition: 'right'
   },
   paper: {
-    margin: theme.spacing(12, 4),
+    margin: theme.spacing(0, 4),
+    height: '100%',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
+    justifyContent: 'center'
   },
   cosmicom: {
     fontFamily: "'Open Sans', sans-serif",
-    margin: theme.spacing(0, 0, 10)
+    height: '100%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   form: {
     width: '100%', // Fix IE 11 issue.
@@ -80,34 +85,96 @@ export default function Register() {
   return (
     <Grid container component="main" className={classes.root}>
       <CssBaseline />
-      <Grid item xs={false} sm={4} md={8} className={classes.image} />
+      <Grid item xs={false} sm={4} md={8} className={classes.image} >
+        <Hidden mdDown>
+        <Typography 
+          component="h1" 
+          variant="h2" 
+          className={classes.cosmicom} 
+          style={{
+            backgroundColor: dark ? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.5)"
+          }}
+        >
+          Cosmicom
+        </Typography>
+        </Hidden>
+      </Grid>
       <Grid item xs={12} sm={8} md={4} component={Paper} elevation={6} square>
         <div className={classes.paper}>
-          <Typography component="h1" variant="h2" className={classes.cosmicom}>
-            Cosmicom
-          </Typography>
           <Typography component="h1" variant="h5">
             Register
           </Typography>
           <form className={classes.form} noValidate onSubmit={handleSubmit}>
-            <TextField
-              variant="outlined"
-              margin="normal"
-              required
-              fullWidth
-              id="usertype"
-              label="How do you plan to use this website?"
-              name="usertype"
-              autoComplete="usertype"
-              autoFocus
-              select
-              value={details.usertype}
-              onChange={handleChange}
-            >
-                <MenuItem value="user">As a customer</MenuItem>
-                <MenuItem value="merchant">As a merchant</MenuItem>
-                <MenuItem value="shipper">As a shipper</MenuItem>
-            </TextField>
+            {
+              stage === 0 ?
+              <TextField
+                variant="outlined"
+                margin="normal"
+                required
+                fullWidth
+                id="usertype"
+                label="How do you plan to use this website?"
+                name="usertype"
+                autoComplete="usertype"
+                autoFocus
+                select
+                value={details.usertype}
+                onChange={handleChange}
+              >
+                  <MenuItem value="user">As a customer</MenuItem>
+                  <MenuItem value="merchant">As a merchant</MenuItem>
+                  <MenuItem value="shipper">As a shipper</MenuItem>
+              </TextField> :
+              <>
+              <TextField
+                variant="outlined"
+                margin="normal"
+                required
+                fullWidth
+                id="name"
+                label="Full name"
+                name="name"
+                autoComplete="name"
+                autoFocus
+                onChange={handleChange}
+              />
+              <TextField
+                variant="outlined"
+                margin="normal"
+                required
+                fullWidth
+                id="email"
+                label="Email Address"
+                name="email"
+                autoComplete="email"
+                onChange={handleChange}
+              />
+              <TextField
+                variant="outlined"
+                margin="normal"
+                required
+                fullWidth
+                name="password"
+                label="Password"
+                type="password"
+                id="password"
+                autoComplete="current-password"
+                onChange={handleChange}
+              />
+              <TextField
+                variant="outlined"
+                margin="normal"
+                required
+                fullWidth
+                name="confpass"
+                label="Confirm Password"
+                type="password"
+                id="confpass"
+                autoComplete="confirm-password"
+                onChange={handleChange}
+              />
+              </>
+            }
             <Button
               type="submit"
               fullWidth
