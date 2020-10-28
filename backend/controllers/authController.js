@@ -3,7 +3,7 @@ const { Pool } = require('pg');
 const db = require('../db')
 const jwt = require('jsonwebtoken');
 
-const login = (req, res) => {
+const login = async (req, res) => {
     try{
         db
         .query('SELECT * FROM $1s WHERE email = $2', [req.body.usertype,req.body.email],(response) => {
