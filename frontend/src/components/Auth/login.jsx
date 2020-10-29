@@ -170,6 +170,7 @@ export default function Login() {
                   <MenuItem value="user">As a customer</MenuItem>
                   <MenuItem value="merchant">As a merchant</MenuItem>
                   <MenuItem value="shipper">As a shipper</MenuItem>
+                  <MenuItem value="employee">As an employee</MenuItem>
               </TextField>
             <Button
               type="submit"
