@@ -1,85 +1,85 @@
 CREATE TABLE "orders" (
-  "id" int PRIMARY KEY,
-  "user_id" int UNIQUE NOT NULL,
+  "id" varchar PRIMARY KEY,
+  "user_id" varchar UNIQUE NOT NULL,
   "status" varchar,
   "created_at" date,
   "netAmt" bigint,
   "paymentMode" varchar,
-  "shipper_id" int
+  "shipper_id" varchar
 );
 
 CREATE TABLE "order_items" (
-  "order_id" int,
-  "product_id" int,
+  "order_id" varchar,
+  "product_id" varchar,
   "quantity" int
 );
 
 CREATE TABLE "products" (
-  "id" int PRIMARY KEY,
+  "id" varchar PRIMARY KEY,
   "name" varchar,
-  "merchant_id" int NOT NULL,
-  "price" int,
+  "merchant_id" varchar NOT NULL,
+  "price" bigint,
   "status" varchar,
   "created_at" date,
-  "category_id" int
+  "category_id" varchar
 );
 
 CREATE TABLE "users" (
-  "id" int PRIMARY KEY,
-  "full_name" varchar,
+  "id" varchar PRIMARY KEY,
+  "name" varchar,
   "email" varchar UNIQUE,
   "gender" varchar,
   "phone" varchar,
   "walletAmt" bigint,
   "date_of_birth" date,
   "created_at" date,
-  "country_code" int,
+  "country_code" varchar,
   "password" varchar
 );
 
 CREATE TABLE "merchants" (
-  "id" int PRIMARY KEY,
-  "admin_id" int,
-  "merchant_name" varchar,
+  "id" varchar PRIMARY KEY,
+  "name" varchar,
+  "email" varchar UNIQUE,
   "website" varchar,
-  "country_code" int,
+  "country_code" varchar,
   "created_at" date,
-  "emp_id" int NOT NULL,
+  "emp_id" varchar NOT NULL,
   "password" varchar
 );
 
 CREATE TABLE "categories" (
-  "id" int PRIMARY KEY,
+  "id" varchar PRIMARY KEY,
   "cat_name" varchar,
-  "parent_id" int
+  "parent_id" varchar
 );
 
 CREATE TABLE "countries" (
-  "code" int PRIMARY KEY,
+  "code" varchar PRIMARY KEY,
   "name" varchar,
-  "continent_name" varchar
+  "dial_code" varchar
 );
 
 CREATE TABLE "employees" (
-  "id" int PRIMARY KEY,
+  "id" varchar PRIMARY KEY,
   "name" varchar,
   "email" varchar UNIQUE,
-  "salary" bigint,
   "phone" varchar,
   "date_of_birth" date,
   "created_at" date,
-  "country_code" int,
+  "country_code" varchar,
   "password" varchar
 );
 
 CREATE TABLE "shippers" (
-  "id" int PRIMARY KEY,
+  "id" varchar PRIMARY KEY,
   "name" varchar,
-  "email" varchar,
+  "email" varchar UNIQUE,
   "website" varchar,
   "country_code" int,
   "created_at" date,
-  "password" varchar
+  "password" varchar,
+  "emp_id" varchar [not null]
 );
 
 ALTER TABLE "orders" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");
@@ -105,3 +105,5 @@ ALTER TABLE "employees" ADD FOREIGN KEY ("country_code") REFERENCES "countries" 
 ALTER TABLE "merchants" ADD FOREIGN KEY ("emp_id") REFERENCES "employees" ("id");
 
 ALTER TABLE "orders" ADD FOREIGN KEY ("shipper_id") REFERENCES "shippers" ("id");
+
+ALTER TABLE "shippers" ADD FOREIGN KEY ("emp_id") REFERENCES "employees" ("id");

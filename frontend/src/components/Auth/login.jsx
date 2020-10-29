@@ -11,6 +11,9 @@ import { Link as RRDLink } from 'react-router-dom';
 import { ThemeContext } from '../../context/useTheme';
 import { Fab, Hidden, MenuItem } from '@material-ui/core';
 import { Brightness4, Brightness7 } from '@material-ui/icons'
+import { useSnackbar } from 'notistack'
+
+import Axios from 'axios';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -61,6 +64,8 @@ export default function Login() {
 
   const {dark, toggleTheme} = useContext(ThemeContext)
 
+  const { enqueueSnackbar } = useSnackbar()
+
   const [details, setDetails] = useState({
     email: '',
     password: '',
@@ -76,15 +81,37 @@ export default function Login() {
   }
 
   const handleSubmit = e => {
-      e.preventDefault()
-      console.log(details)
+    e.preventDefault()
+    if (!details.email || !details.password) {
+      alert("Please fill all fields to login")
+      return
+    }
+    Axios.post(
+      "http://localhost:8000/login",
+      details,
+      {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    )
+    .then(res => {
+      console.log(res.data)
+      enqueueSnackbar('Login Successful', { variant: 'success'})
+    })
+    .catch(err => {
+      console.log(err)
+      enqueueSnackbar('Invalid credentials', {
+        variant: 'error'
+      })
+    })
   }
 
   return (
     <Grid container component="main" className={classes.root}>
       <CssBaseline />
       <Grid item xs={false} sm={4} md={8} className={classes.image}>
-        <Hidden mdDown>
+        <Hidden smDown>
         <Typography 
           component="h1" 
           variant="h2" 

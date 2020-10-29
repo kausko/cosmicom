@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import Button from '@material-ui/core/Button';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import TextField from '@material-ui/core/TextField';
@@ -7,11 +7,19 @@ import Paper from '@material-ui/core/Paper';
 import Grid from '@material-ui/core/Grid';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/styles';
-import { Link as RRDLink } from 'react-router-dom';
+import { Link as RRDLink, useHistory } from 'react-router-dom';
 import { MenuItem, Hidden } from '@material-ui/core';
 import { ThemeContext } from '../../context/useTheme';
 import { Fab } from '@material-ui/core';
 import { Brightness4, Brightness7 } from '@material-ui/icons'
+import Axios from 'axios'
+import { Autocomplete } from '@material-ui/lab'
+import DateFnsUtils from '@date-io/date-fns';
+import {
+  MuiPickersUtilsProvider,
+  KeyboardDatePicker,
+} from '@material-ui/pickers';
+import { useSnackbar } from 'notistack';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -62,10 +70,25 @@ export default function Register() {
 
   const {dark, toggleTheme} = useContext(ThemeContext)
 
+  const { enqueueSnackbar } = useSnackbar()
+  const history = useHistory()
+
   const [stage, setStage] = useState(0)
+  const [countries, setCountries] = useState([])
   const [details, setDetails] = useState({
-      usertype: "user"
+      usertype: "user",
+      dob: new Date()
   })
+
+  useEffect(() => {
+    Axios.get(
+      'http://localhost:8000/countries'
+    )
+    .then(res => {
+      setCountries(res.data)
+    })
+    .catch(err => alert(err))
+  },[])
 
   const handleChange = e => {
     const et = e.target
@@ -75,18 +98,62 @@ export default function Register() {
         setDetails({...details, [et.name]: et.value})    
   }
 
+  const handleCountryChange = (e,v) => {
+    handleChange({target: {
+      id: e.target.id.split("-")[0],
+      value: v.code
+    }})
+  }
+
   const handleSubmit = e => {
       e.preventDefault()
-      console.log(details)
-    //   if (stage < 3)
-        setStage((stage+1)%3)
+      
+      if (stage === 2) {
+        if (!details.name || !details.email || !details.password) {
+          enqueueSnackbar('All fields must be filled!', { variant: 'error' })
+          return;
+        }
+        if (details.password !== details.confpass) {
+          enqueueSnackbar('Password mismatch!', { variant: 'error' })
+          return;
+        }
+
+        Axios.post(
+          "http://localhost:8000/register",
+          details,
+          { headers: { 'Content-Type': 'application/json' } }
+        )
+        .then(res => {
+          enqueueSnackbar('Registration successful!', { variant: 'success' })
+          history.push('/')
+        })
+        .catch(err => {
+          enqueueSnackbar(err.response.data, { variant: 'error' })
+        })
+        return;
+      }
+      else if (stage === 1) {
+        if (details.usertype === "user") {
+          if (!details.country_code || !details.gender || !details.phone) {
+            enqueueSnackbar('All fields must be filled!', { variant: 'error' })
+            return;
+          }
+        }
+        else {
+          if (!details.country_code || !details.website) {
+            enqueueSnackbar('All fields must be filled!', { variant: 'error' })
+            return;
+          }
+        }
+      }
+      setStage((stage+1)%3)
   }
 
   return (
     <Grid container component="main" className={classes.root}>
       <CssBaseline />
       <Grid item xs={false} sm={4} md={8} className={classes.image} >
-        <Hidden mdDown>
+        <Hidden smDown>
         <Typography 
           component="h1" 
           variant="h2" 
@@ -125,6 +192,92 @@ export default function Register() {
                   <MenuItem value="merchant">As a merchant</MenuItem>
                   <MenuItem value="shipper">As a shipper</MenuItem>
               </TextField> :
+              stage === 1 ?
+              <>
+              <Autocomplete
+                id="country_code"
+                fullWidth
+                options={countries}
+                onChange={handleCountryChange}
+                autoHighlight
+                getOptionLabel={option => option.name}
+                renderOption={option =>
+                  <>
+                    {`[${option.code}] ${option.name} [${option.dial_code}]`}
+                  </>
+                }
+                renderInput={params =>
+                  <TextField
+                    {...params}
+                    label="Choose a country"
+                    variant="outlined"
+                    inputProps={{
+                      ...params.inputProps,
+                      autoComplete: 'new-password'
+                    }}
+                  />
+                }
+              />
+              {
+                details.usertype === "user" 
+                ?
+                <>
+                <TextField
+                  variant="outlined"
+                  margin="normal"
+                  required
+                  fullWidth
+                  id="gender"
+                  label="Gender"
+                  name="gender"
+                  autoComplete="gender"
+                  onChange={handleChange}
+                />
+                <TextField
+                  variant="outlined"
+                  margin="normal"
+                  required
+                  fullWidth
+                  id="phone"
+                  label="Phone no"
+                  name="phone"
+                  autoComplete="phone"
+                  type="number"
+                  onChange={handleChange}
+                />
+                <MuiPickersUtilsProvider utils={DateFnsUtils}>
+                  <KeyboardDatePicker
+                    disableToolbar
+                    inputVariant="outlined"
+                    variant="inline"
+                    format="yyyy-MM-dd"
+                    margin="normal"
+                    id="dob"
+                    label="Date of birth"
+                    value={details.dob}
+                    onChange={(d,v) => handleChange({ target: { id: "dob", value: v}})}
+                    fullWidth
+                    autoComplete="dob"
+                  />
+                </MuiPickersUtilsProvider>
+                </>
+                :
+                <>
+                  <TextField
+                  variant="outlined"
+                  margin="normal"
+                  required
+                  fullWidth
+                  id="website"
+                  label="Website"
+                  name="website"
+                  autoComplete="website"
+                  onChange={handleChange}
+                />
+                </>
+              }
+              </>
+              :
               <>
               <TextField
                 variant="outlined"
@@ -174,6 +327,9 @@ export default function Register() {
                 onChange={handleChange}
               />
               </>
+            }
+            {
+              stage > 0 && <Button fullWidth color="primary" onClick={() => setStage(stage-1)}>Go back</Button>
             }
             <Button
               type="submit"

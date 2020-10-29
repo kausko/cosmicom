@@ -12,6 +12,8 @@ router.use((req, res, next) => {
   next();
 })
 
-router.post('/login', auth.login)
-router.post('/register',auth.register);
+router.post('/login', auth.login);
+router.post('/register', auth.register);
+router.get('/countries', auth.getCountries);
+
 module.exports = router;
