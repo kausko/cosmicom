@@ -12,12 +12,11 @@ const login = async (req, res) => {
                 return res.status(400).json({msg: 'Enter valid password'})
             }
             const payload = {
-                user : {
-                    email: req.body.email
-                }
+                email: req.body.email,
+                usertype: req.body.usertype
             }
             jwt.sign(payload, process.env.JWTSECRET, {
-                expiresIn:3600
+                expiresIn:36000
             },(err, token) => {
                 if(err) throw err
                 res.status(200).json({token})
@@ -28,7 +27,7 @@ const login = async (req, res) => {
             throw new Error('Email not found')
     }catch(err) {
         console.error(err.message)
-        res.status(500).send('Server error')
+        res.status(500).send(err.message)
     }
 }
 
