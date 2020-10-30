@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const order = require('../controllers/orderController');
+const order = require('../controllers/shipperController');
 const auth = require('../middleware/auth');
 router.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
@@ -12,6 +12,6 @@ router.use((req, res, next) => {
   next();
 })
 
-router.get('/getAllOrders',auth, order.shipperOrders)
-router.post('/updateOrderStatus',auth, order.shipperOrderUpdate);
+router.get('/:pages',auth, order.shipperOrders)
+router.put('/delivery/:id',auth, order.shipperOrderUpdate);
 module.exports = router;

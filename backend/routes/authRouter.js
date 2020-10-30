@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../controllers/authController')
-const order = require('../controllers/orderController');
+const order = require('../controllers/shipperController');
 router.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Methods", "PUT, OPTIONS, GET, POST, DELETE");
