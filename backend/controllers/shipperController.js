@@ -31,17 +31,17 @@ const shipperOrders = async (req, res) => {
 }
 const shipperOrderUpdate = async(req, res) => {
     try{
-        const { usertype } = jwt.verify(req.headers.authorization.split(" ")[1], process.env.JWTSECRET)
+        const { id,usertype } = jwt.verify(req.headers.authorization.split(" ")[1], process.env.JWTSECRET)
 
         if (usertype !== 'shipper')
             res.status(401).send('ACCESS DENIED')
         else {
-            const { id } = req.params
-            console.log(typeof (id))
+            const { orderid } = req.params
+            console.log(typeof (orderid))
             const result = await db.query('UPDATE orders SET status= $1 WHERE id= $2 AND shipper_id= $3', [
                 req.body.status,
-                id,
-                req.body.shipperId
+                orderid,
+                id
             ])
             if (result.rowCount === 0)
                 res.status(422).send(`Order with id: ${id} not found`);
