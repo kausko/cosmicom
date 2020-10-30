@@ -8,9 +8,9 @@ module.exports = function(req, res, next) {
 
     if (token) {
 
-        const { email, usertype } = jwt.verify(token.split(" ")[1], process.env.JWTSECRET);
+        const { id, usertype } = jwt.verify(token.split(" ")[1], process.env.JWTSECRET);
 
-        db.query(`SELECT * FROM ${usertype}s WHERE email=$1`, [email])
+        db.query(`SELECT * FROM ${usertype}s WHERE id=$1`, [id])
         .then(({rows}) => {
             if (!rows.length) 
                 throw new Error('Credential mismatch')

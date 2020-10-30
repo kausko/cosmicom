@@ -17,7 +17,7 @@ const login = async (req, res) => {
                 return res.status(400).send('Enter valid password')
             }
             const payload = {
-                email: req.body.email,
+                id: rows[0].id,
                 usertype: req.body.usertype
             }
             jwt.sign(payload, process.env.JWTSECRET, {
