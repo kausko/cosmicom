@@ -1,7 +1,6 @@
 const db = require('../db')
 const ObjectId = require('bson-objectid')
 const jwt = require('jsonwebtoken')
-const { parse } = require('dotenv/types')
 require('dotenv').config()
 
 const getAllProducts = async (req, res) => {
@@ -23,7 +22,7 @@ const getAllProducts = async (req, res) => {
                 res.status(200).json(rows);
             }
             else if(rows.length == 0)
-                res.status(200).json({msg:'No products yet'});
+                res.status(200).json({msg:'No products here yet'});
         }
     }catch(err) {
         console.error(err.message);
@@ -92,7 +91,7 @@ const editProduct = async (req, res) => {
                  price = '${price}',
                  status = '${status}'
                 WHERE id = '${product_id}'
-                AND merchant_id = '${id}`
+                AND merchant_id = '${id}'`
             )
             if (result.rowCount === 0)
                 res.status(422).send(`Product with id: ${product_id} not found`);
@@ -112,9 +111,9 @@ const deleteProduct = async (req, res) => {
             res.status(401).send('ACCESS DENIED')
         else {
             const result = await db.query(
-                `DELETE * from products
+                `DELETE FROM products
                 WHERE id = '${product_id}'
-                AND merchant_id = '${id}`
+                AND merchant_id = '${id}'`
             )
             if (result.rowCount === 0)
                 res.status(422).send(`Product with id: ${product_id} not found`);
