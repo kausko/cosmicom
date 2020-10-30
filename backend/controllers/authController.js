@@ -5,11 +5,16 @@ const ObjectId = require('bson-objectid')
 
 const login = async (req, res) => {
     try{
-        const {rows} = await db.query(`SELECT * FROM ${req.body.usertype}s WHERE email = $1`, [req.body.email])
+        const rbu = req.body.usertype
+        const {rows} = await db.query(`SELECT * FROM ${rbu}s WHERE email = $1`, [req.body.email])
         if (rows.length){
+
+            if ((rbu === 'merchant' || rbu === 'shipper') && !rows[0].status)
+                return res.status(400).send('Account not verified yet')
+
             const isMatch = await bcrypt.compare(req.body.password, rows[0].password)
             if(!isMatch) {
-                return res.status(400).json({msg: 'Enter valid password'})
+                return res.status(400).send('Enter valid password')
             }
             const payload = {
                 email: req.body.email,
@@ -24,7 +29,7 @@ const login = async (req, res) => {
     
         }
         else
-            throw new Error('Email not found')
+            return res.status(400).json('Enter valid password')
     }catch(err) {
         console.error(err.message)
         res.status(500).send(err.message)
@@ -53,7 +58,7 @@ const register = async (req,res) => {
             const emp_id = rows[Math.floor(Math.random() * rows.length)].id
             console.log(emp_id);
             
-            const result = await db.query(`INSERT INTO ${usertype}s(id, name, email, website, country_code, created_at, emp_id, password) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`, [
+            const result = await db.query(`INSERT INTO ${usertype}s(id, name, email, website, country_code, created_at, emp_id, password, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`, [
                 id,
                 name,
                 email,
@@ -62,6 +67,7 @@ const register = async (req,res) => {
                 cat,
                 emp_id,
                 password,
+                false
             ])
 
             res.status(200).json(result)

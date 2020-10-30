@@ -47,9 +47,28 @@ const deleteCategory = async (req, res) => {
     }
 }
 
+const getMerchants = async (req, res) => {
+    try {
+        const { usertype } = jwt.verify(req.headers.authorization.split(" ")[1], process.env.JWTSECRET)
+
+        if (usertype !== 'employee')
+            res.status(401).send('ACCESS DENIED')
+        else {
+            const {rows} = await db.query('SELECT * FROM merchants')
+            res.status(200).json(rows)
+            // console.log(parseInt(req.params.page), req.params.status === 'true')
+            // res.status(200).send('Testing')
+        }
+    }
+    catch (err) {
+        res.status(500).send(err.message)
+    }
+}
+
 module.exports = {
     addCategory,
-    deleteCategory
+    deleteCategory,
+    getMerchants
 }
 
 // id            |        parent_id         |  cat_icon  |  cat_name   

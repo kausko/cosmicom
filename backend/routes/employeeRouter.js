@@ -17,5 +17,6 @@ router.use((req, res, next) => {
 router.get('/categories', auth, common.categories)
 router.post('/categories', auth, employee.addCategory)
 router.delete('/categories/:id', auth, employee.deleteCategory)
+router.get('/merchants/:status/:page', auth, employee.getMerchants)
 
 module.exports = router;
