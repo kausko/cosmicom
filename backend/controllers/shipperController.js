@@ -5,13 +5,19 @@ const jwt = require('jsonwebtoken');
 
 const shipperOrders = async (req, res) => {
     try{
-        const { usertype } = jwt.verify(req.headers.authorization.split(" ")[1], process.env.JWTSECRET)
-        const { id } = jwt.verify(req.headers.authorization.split(" ")[1], process.env.JWTSECRET)
+        const { id, usertype } = jwt.verify(req.headers.authorization.split(" ")[1], process.env.JWTSECRET)
+
+        const page = parseInt(req.params.page)
 
         if (usertype !== 'shipper')
             res.status(401).send('ACCESS DENIED')
         else {
-            const rows = await db.query('SELECT * FROM orders WHERE shipper_id = $1 ORDER BY created_at, id DESC LIMIT 10', [id])
+            const {rows} = await db.query(
+                `SELECT * FROM orders 
+                WHERE shipper_id = '${id}'
+                ORDER BY created_at 
+                LIMIT 10 OFFSET ${10*(page-1)}`
+            )
             if (rows.length>0){
                 res.status(200).json(rows);
             }

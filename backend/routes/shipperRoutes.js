@@ -12,6 +12,6 @@ router.use((req, res, next) => {
   next();
 })
 
-router.get('/:pages',auth, order.shipperOrders)
+router.get('/:page',auth, order.shipperOrders)
 router.put('/delivery/:id',auth, order.shipperOrderUpdate);
 module.exports = router;

@@ -54,7 +54,20 @@ const getMerchants = async (req, res) => {
         if (usertype !== 'employee')
             res.status(401).send('ACCESS DENIED')
         else {
-            const {rows} = await db.query('SELECT * FROM merchants')
+            const page = parseInt(req.params.page)
+            const status = req.params.status
+
+            const { id } = jwt.verify(req.headers.authorization.split(" ")[1], process.env.JWTSECRET);
+
+            const {rows} = await db.query(
+                `SELECT * FROM merchants 
+                WHERE 
+                    status=${status} AND 
+                    emp_id='${id}' 
+                ORDER BY created_at 
+                LIMIT 10 
+                OFFSET ${10*(page-1)}`
+            )
             res.status(200).json(rows)
             // console.log(parseInt(req.params.page), req.params.status === 'true')
             // res.status(200).send('Testing')
