@@ -49,15 +49,13 @@ const deleteCategory = async (req, res) => {
 
 const getMerchants = async (req, res) => {
     try {
-        const { usertype } = jwt.verify(req.headers.authorization.split(" ")[1], process.env.JWTSECRET)
+        const { id, usertype } = jwt.verify(req.headers.authorization.split(" ")[1], process.env.JWTSECRET)
 
         if (usertype !== 'employee')
             res.status(401).send('ACCESS DENIED')
         else {
             const page = parseInt(req.params.page)
             const status = req.params.status
-
-            const { id } = jwt.verify(req.headers.authorization.split(" ")[1], process.env.JWTSECRET);
 
             const {rows} = await db.query(
                 `SELECT * FROM merchants 
@@ -69,8 +67,119 @@ const getMerchants = async (req, res) => {
                 OFFSET ${10*(page-1)}`
             )
             res.status(200).json(rows)
-            // console.log(parseInt(req.params.page), req.params.status === 'true')
-            // res.status(200).send('Testing')
+        }
+    }
+    catch (err) {
+        res.status(500).send(err.message)
+    }
+}
+
+const approveMerchant = async (req, res) => {
+    try {
+        const { id, usertype } = jwt.verify(req.headers.authorization.split(" ")[1], process.env.JWTSECRET)
+
+        if (usertype !== 'employee')
+            res.status(401).send('ACCESS DENIED')
+        else {
+            const { merchant_id } = req.params
+
+            console.log(merchant_id, id);
+
+            const result = await db.query(
+                `UPDATE merchants SET status=true WHERE id='${merchant_id}' AND emp_id='${id}'`
+            )
+            res.status(200).json(result)
+        }
+    }
+    catch (err) {
+        res.status(500).send(err.message)
+    }
+}
+
+const rejectMerchant = async (req, res) => {
+    try {
+        const { id, usertype } = jwt.verify(req.headers.authorization.split(" ")[1], process.env.JWTSECRET)
+
+        if (usertype !== 'employee')
+            res.status(401).send('ACCESS DENIED')
+        else {
+
+            const { merchant_id } = req.params
+
+            const result = await db.query(
+                `DELETE FROM merchants where id='${merchant_id}' AND emp_id='${id}'`
+            )
+
+            res.status(200).json(result)
+        }
+    }
+    catch (err) {
+        res.status(500).send(err.message)
+    }
+}
+
+const getShippers = async (req, res) => {
+    try {
+        const { id, usertype } = jwt.verify(req.headers.authorization.split(" ")[1], process.env.JWTSECRET)
+
+        if (usertype !== 'employee')
+            res.status(401).send('ACCESS DENIED')
+        else {
+            const page = parseInt(req.params.page)
+            const status = req.params.status
+
+            const {rows} = await db.query(
+                `SELECT * FROM shippers 
+                WHERE 
+                    status=${status} AND 
+                    emp_id='${id}' 
+                ORDER BY created_at 
+                LIMIT 10 
+                OFFSET ${10*(page-1)}`
+            )
+            res.status(200).json(rows)
+        }
+    }
+    catch (err) {
+        res.status(500).send(err.message)
+    }
+}
+
+const approveShipper = async (req, res) => {
+    try {
+        const { id, usertype } = jwt.verify(req.headers.authorization.split(" ")[1], process.env.JWTSECRET)
+
+        if (usertype !== 'employee')
+            res.status(401).send('ACCESS DENIED')
+        else {
+            const { shipper_id } = req.params
+
+            const result = await db.query(
+                `UPDATE shippers SET status=true WHERE id='${shipper_id}' AND emp_id='${id}'`
+            )
+            res.status(200).json(result)
+        }
+    }
+    catch (err) {
+        res.status(500).send(err.message)
+    }
+}
+
+const rejectShipper = async (req, res) => {
+    try {
+        const { id, usertype } = jwt.verify(req.headers.authorization.split(" ")[1], process.env.JWTSECRET)
+
+        if (usertype !== 'employee')
+            res.status(401).send('ACCESS DENIED')
+        else {
+
+            const { shipper_id } = req.params
+
+            const result = await db.query(
+                `DELETE FROM shippers where id='${shipper_id}' AND emp_id='${id}'`
+            )
+            
+            res.status(200).json(result)
         }
     }
     catch (err) {
@@ -81,7 +190,12 @@ const getMerchants = async (req, res) => {
 module.exports = {
     addCategory,
     deleteCategory,
-    getMerchants
+    getMerchants,
+    approveMerchant,
+    rejectMerchant,
+    getShippers,
+    approveShipper,
+    rejectShipper
 }
 
 // id            |        parent_id         |  cat_icon  |  cat_name   
