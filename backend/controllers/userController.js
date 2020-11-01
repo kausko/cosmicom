@@ -119,8 +119,10 @@ const addToCart = async (req, res) => {
           ]
         );
         res.status(200).json(data);
-      } else if (rows.length == 0)
+      } else if (rows.length == 0) {
+        // new order id creation goes here
         res.status(200).json({ msg: `No order with id = '{$order_id}' yet` });
+      }
     }
   } catch (err) {
     console.error(err.message);
@@ -132,4 +134,5 @@ module.exports = {
   getOrder,
   search,
   buy,
+  addToCart,
 };
