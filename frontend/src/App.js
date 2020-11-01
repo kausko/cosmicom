@@ -1,4 +1,4 @@
-import React, { useState, useContext, useMemo } from 'react'
+import React from 'react'
 import './App.css';
 import Routes from './components/routes';
 import { colors, MuiThemeProvider, createMuiTheme } from '@material-ui/core';
@@ -22,7 +22,7 @@ const darkPallette = {
 
 function App() {
 
-  const {dark} = useContext(ThemeContext)
+  const {dark} = React.useContext(ThemeContext)
 
   const theme = React.useMemo(() =>
     dark ? createMuiTheme(darkPallette) : createMuiTheme(lightPallete),

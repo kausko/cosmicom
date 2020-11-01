@@ -6,7 +6,7 @@ const employee = require('../controllers/employeeController')
 
 router.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "PUT, OPTIONS, GET, POST, DELETE");
+  res.header("Access-Control-Allow-Methods", "PUT, OPTIONS, GET, POST, DELETE, PATCH");
   res.header(
     "Access-Control-Allow-Headers",
     "Origin, X-Requested-With, Content-Type, Accept, X-Access-Token, X-Key, Authorization"

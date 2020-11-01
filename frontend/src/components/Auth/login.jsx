@@ -7,9 +7,9 @@ import Paper from '@material-ui/core/Paper';
 import Grid from '@material-ui/core/Grid';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/styles';
-import { Link as RRDLink } from 'react-router-dom';
+import { Link as RRDLink, useHistory } from 'react-router-dom';
 import { ThemeContext } from '../../context/useTheme';
-import { Fab, Hidden, MenuItem } from '@material-ui/core';
+import { Fab, Hidden, MenuItem, LinearProgress } from '@material-ui/core';
 import { Brightness4, Brightness7 } from '@material-ui/icons'
 import { useSnackbar } from 'notistack'
 
@@ -47,7 +47,10 @@ const useStyles = makeStyles((theme) => ({
     marginTop: theme.spacing(1),
   },
   submit: {
-    margin: theme.spacing(3, 0, 2),
+    marginTop: theme.spacing(3)
+  },
+  forgotLabel: {
+    marginTop: theme.spacing(2)
   },
   fab: {
     position: 'absolute',
@@ -66,11 +69,15 @@ export default function Login() {
 
   const { enqueueSnackbar } = useSnackbar()
 
+  const history = useHistory()
+
   const [details, setDetails] = useState({
     email: '',
     password: '',
     usertype: 'user'
   })
+
+  const [loading, setLoading] = useState(false)
 
   const handleChange = e => {
     const et = e.target
@@ -86,6 +93,7 @@ export default function Login() {
       alert("Please fill all fields to login")
       return
     }
+    setLoading(true)
     Axios.post(
       "http://localhost:8000/login",
       details,
@@ -96,14 +104,16 @@ export default function Login() {
       }
     )
     .then(res => {
-      console.log(res.data)
       enqueueSnackbar('Login Successful', { variant: 'success'})
+      sessionStorage.setItem('token', res.data.token)
+      history.push(`/${details.usertype}`)
     })
     .catch(err => {
       console.log(err)
       enqueueSnackbar('Invalid credentials', {
         variant: 'error'
       })
+      setLoading(false)
     })
   }
 
@@ -182,7 +192,8 @@ export default function Login() {
             >
               Sign In
             </Button>
-            <Grid container>
+            {loading && <LinearProgress />}
+            <Grid container className={classes.forgotLabel}>
               <Grid item>
                 <Link component={RRDLink} to='/register'>
                   Don't have an account? Sign Up

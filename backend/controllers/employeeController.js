@@ -58,10 +58,17 @@ const getMerchants = async (req, res) => {
             const status = req.params.status
 
             const {rows} = await db.query(
-                `SELECT * FROM merchants 
-                WHERE 
-                    status=${status} AND 
-                    emp_id='${id}' 
+                `WITH Data_CTE AS ( 
+                    SELECT id, name, email, website, created_at FROM merchants 
+                    WHERE 
+                        status=${status} AND 
+                        emp_id='${id}' 
+                ),
+                Count_CTE AS (
+                    SELECT COUNT(*) AS totalCount FROM Data_CTE
+                )
+                SELECT * FROM Data_CTE
+                CROSS JOIN Count_CTE
                 ORDER BY created_at 
                 LIMIT 10 
                 OFFSET ${10*(page-1)}`
@@ -129,10 +136,17 @@ const getShippers = async (req, res) => {
             const status = req.params.status
 
             const {rows} = await db.query(
-                `SELECT * FROM shippers 
-                WHERE 
-                    status=${status} AND 
-                    emp_id='${id}' 
+                `WITH Data_CTE AS ( 
+                    SELECT id, name, email, website, created_at FROM shippers 
+                    WHERE 
+                        status=${status} AND 
+                        emp_id='${id}' 
+                ),
+                Count_CTE AS (
+                    SELECT COUNT(*) AS totalCount FROM Data_CTE
+                )
+                SELECT * FROM Data_CTE
+                CROSS JOIN Count_CTE
                 ORDER BY created_at 
                 LIMIT 10 
                 OFFSET ${10*(page-1)}`
