@@ -14,8 +14,8 @@ router.use((req, res, next) => {
 })
 router.get('/categories', auth, common.categories)
 router.get('/:page',auth, merchant.getAllProducts)
-router.get('/:category_id/:page',auth, merchant.getProductsByCategory)
-router.get('/:id',auth, merchant.getProductDetails)
+router.get('/:category_id/:page',auth, common.getProductsByCategory)
+router.get('/:id',auth, common.getProductDetails)
 router.put('/:id',auth, merchant.editProduct)
 router.delete('/:id',auth, merchant.deleteProduct)
 

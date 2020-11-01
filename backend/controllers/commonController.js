@@ -1,7 +1,10 @@
-const db = require('../db')
-
+const db = require('../db');
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
 const categories = (req, res) =>
-    db.query(`
+  db
+    .query(
+      `
         WITH RECURSIVE c AS (
             SELECT *, 0 as lvl
             FROM   categories
@@ -35,13 +38,67 @@ const categories = (req, res) =>
         SELECT row_to_json(j) json_tree
         FROM   j
         WHERE  lvl = 0;
-    `)
-    .then(({rows}) => {
-        res.status(200).json(rows[0].json_tree.children)
+    `
+    )
+    .then(({ rows }) => {
+      res.status(200).json(rows[0].json_tree.children);
     })
-    .catch(err => res.status(500).json(err.message))
+    .catch((err) => res.status(500).json(err.message));
 
+const getProductsByCategory = async (req, res) => {
+  try {
+    const { usertype } = jwt.verify(
+      req.headers.authorization.split(' ')[1],
+      process.env.JWTSECRET
+    );
+    const page = parseInt(req.params.page);
+    const category = parseInt(req.params.category_id);
+    if (usertype !== 'merchant' || usertype !== 'user')
+      res.status(401).send('ACCESS DENIED');
+    else {
+      const { rows } = await db.query(
+        `SELECT * FROM products 
+                ORDER BY created_at ASC,
+                category_id = '${category}' ASC
+                LIMIT 10 OFFSET ${10 * (page - 1)}`
+      );
+      if (rows.length > 0) {
+        res.status(200).json(rows);
+      } else if (rows.length == 0)
+        res.status(200).json({ msg: 'No products yet' });
+    }
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
+};
 
+const getProductDetails = async (req, res) => {
+  try {
+    const { usertype } = jwt.verify(
+      req.headers.authorization.split(' ')[1],
+      process.env.JWTSECRET
+    );
+    const id = parseInt(req.params.id);
+    if (usertype !== 'merchant' || usertype !== 'user')
+      res.status(401).send('ACCESS DENIED');
+    else {
+      const { rows } = await db.query(
+        `SELECT * FROM products 
+                WHERE id = '${id}'`
+      );
+      if (rows.length > 0) {
+        res.status(200).json(rows);
+      } else if (rows.length == 0)
+        res.status(200).json({ msg: 'No such product' });
+    }
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
+};
 module.exports = {
-    categories
-}
+  categories,
+  getProductsByCategory,
+  getProductDetails,
+};
