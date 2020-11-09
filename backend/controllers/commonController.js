@@ -5,43 +5,52 @@ const categories = (req, res) =>
   db
     .query(
       `
-        WITH RECURSIVE c AS (
-            SELECT *, 0 as lvl
-            FROM   categories
-            WHERE  parent_id IS NULL
-        UNION ALL
-            SELECT categories.*, c.lvl + 1
-            FROM   categories 
-            JOIN   c ON categories.parent_id = c.id
-        ),
-        maxlvl AS (
-        SELECT max(lvl) maxlvl FROM c
-        ),
-        j AS (
-            SELECT c.*, json '[]' children
-            FROM   c, maxlvl
-            WHERE  lvl = maxlvl
-        UNION ALL
-            SELECT   (c).*, array_to_json(array_agg(j) || array(SELECT r
-                                                                FROM   (SELECT l.*, json '[]' children
-                                                                        FROM   c l, maxlvl
-                                                                        WHERE  l.parent_id = (c).id
-                                                                        AND    l.lvl < maxlvl
-                                                                        AND    NOT EXISTS (SELECT 1
-                                                                                        FROM   c lp
-                                                                                        WHERE  lp.parent_id = l.id)) r)) children
-            FROM     (SELECT c, j
-                    FROM   c
-                    JOIN   j ON j.parent_id = c.id) v
-            GROUP BY v.c
-        )
-        SELECT row_to_json(j) json_tree
-        FROM   j
-        WHERE  lvl = 0;
+      WITH RECURSIVE
+      c_with_level AS (
+          
+          SELECT *, 0 as lvl
+          FROM   categories
+          WHERE  parent_id IS NULL
+      
+          UNION ALL
+          
+          SELECT child.*, parent.lvl + 1
+          FROM   categories child
+          JOIN   c_with_level parent ON parent.id = child.parent_id
+      ),
+      maxlvl AS (
+        SELECT max(lvl) maxlvl FROM c_with_level
+      ),
+      c_tree AS (
+          SELECT c_with_level.*, jsonb '[]' children
+          FROM   c_with_level, maxlvl
+          WHERE  lvl = maxlvl
+      
+          UNION 
+          (
+              SELECT (branch_parent).*, jsonb_agg(branch_child)
+              FROM (
+                  SELECT branch_parent, branch_child
+                  FROM c_with_level branch_parent
+                  JOIN c_tree branch_child ON branch_child.parent_id = branch_parent.id
+              ) branch
+              GROUP BY branch.branch_parent
+                  
+              UNION
+                  
+              SELECT c.*, jsonb '[]' children
+              FROM   c_with_level c
+              WHERE  NOT EXISTS (SELECT 1 FROM c_with_level hypothetical_child WHERE hypothetical_child.parent_id = c.id)
+          )
+      )
+      SELECT jsonb_pretty(row_to_json(c_tree)::jsonb)
+      FROM c_tree
+      WHERE lvl = 0;
     `
     )
     .then(({ rows }) => {
-      res.status(200).json(rows[0].json_tree.children);
+      // res.status(200).json(rows[0].json_tree.children);
+      res.status(200).json(rows.map(row => JSON.parse(row.jsonb_pretty).children).flat())
     })
     .catch((err) => res.status(500).json(err.message));
 

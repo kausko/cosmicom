@@ -1,10 +1,13 @@
 import React from 'react'
 import { makeStyles } from '@material-ui/styles'
-import { AppBar, Toolbar, IconButton, Typography, Tab, Tabs, Grid, SwipeableDrawer, List, ListItem, ListItemIcon, ListItemText, Icon, ListItemSecondaryAction } from '@material-ui/core'
+import { AppBar, Toolbar, IconButton, Typography, Tab, Tabs, Grid, SwipeableDrawer, List, ListItem, ListItemText, Icon, ListItemSecondaryAction, Dialog, DialogTitle, DialogContent, DialogContentText, Link, TextField, DialogActions, Button, Tooltip } from '@material-ui/core'
 import MaterialTable from 'material-table'
-import { Menu, LocalShipping, Storefront, ExitToApp, Delete } from '@material-ui/icons';
+import { Menu, LocalShipping, Storefront, ExitToApp, Delete, Brightness7, Brightness4, AddCircle } from '@material-ui/icons';
 import { useHistory } from 'react-router-dom';
 import Axios from 'axios';
+import { useContext } from 'react';
+import { ThemeContext } from '../../context/useTheme';
+import { useSnackbar } from 'notistack'
 
 const useStyles = makeStyles(theme => ({
     root: { flexGrow: 1 },
@@ -39,11 +42,25 @@ export default function EmployeeNav() {
     const unRef = React.createRef();
     const apRef = React.createRef();
 
+    const {dark, toggleTheme} = useContext(ThemeContext)
+
     const [value, setValue] = React.useState(0)
     const [open, setOpen] = React.useState(false)
     const [categories, setCategories] = React.useState([])
+    const [addModal, setAddModal] = React.useState(false)
+
+    const [category, setCategory] = React.useState({
+        parent_name: '',
+        parent_id: '',
+        cat_name: '',
+        cat_icon: ''
+    })
+
+    const { enqueueSnackbar } = useSnackbar()
 
     const toggleDrawer = () => setOpen(!open)
+
+    const toggleModal = () => setAddModal(!addModal)
 
     const handleTabChange = (e, newVal) => {
         setValue(newVal)
@@ -89,7 +106,7 @@ export default function EmployeeNav() {
             unRef.current.onChangePage(e, 0)
             apRef.current.onChangePage(e, 0)
         })
-        .catch(err => alert(err.message))
+        .catch(err => enqueueSnackbar(err.message, { variant: 'error'}))
 
     const deleteRow = (e, rowData, ref) => {
         if (window.confirm("Do you want to reject " + rowData.name + " ?"))
@@ -105,6 +122,63 @@ export default function EmployeeNav() {
         .then(res => {
             ref.current.onChangePage(e, 0)
         })
+        .catch(err => enqueueSnackbar(err.message, { variant: 'error'}))
+    }
+
+    const handleAdd = parent => e => {
+        // console.log(parent_id)
+        toggleDrawer()
+        setCategory({
+            ...category,
+            parent_name: parent.cat_name,
+            parent_id: parent.id,
+        })
+        toggleModal()
+    }
+
+    const handleCategoryChange = e => {
+        setCategory({
+            ...category,
+            [e.currentTarget.id]: e.currentTarget.value
+        })
+    }
+
+    const submitCategory = () => {
+        Axios.post(
+            'http://localhost:8000/employees/categories',
+            category,
+            {
+                headers: {
+                    "Authorization": `Bearer ${sessionStorage.getItem('token')}`,
+                    "Content-Type": 'application/json'
+                }
+            }
+        )
+        .then(getCategories)
+        .then(() => {
+            enqueueSnackbar('Category added successfully', { variant: 'success'})
+        })
+        .catch(err => enqueueSnackbar(err.message, { variant: 'error'}))
+        .finally(toggleModal)
+    }
+
+    const handleDelete = child => e => {
+        if(window.confirm(`Delete category ${child.cat_name}?`)){
+            Axios.delete(
+                `http://localhost:8000/employees/categories/${child.id}`,
+                {
+                    headers: {
+                        "Authorization": `Bearer ${sessionStorage.getItem('token')}`,
+                        "Content-Type": 'application/json'
+                    }
+                }
+            )
+            .then(getCategories)
+            .then(() => {
+                enqueueSnackbar('Category removed successfully', { variant: 'info'})
+            })
+            .catch(err => enqueueSnackbar(err.message, { variant: 'error' }))
+        }
     }
 
     const NestedList = ({children}) => children.map((child, index) => 
@@ -115,21 +189,22 @@ export default function EmployeeNav() {
                 </Icon>
                 <ListItemText primary={child.cat_name}/>
                 <ListItemSecondaryAction>
-                    <IconButton edge="end">
-                        <Delete/>
-                    </IconButton>
+                    <Tooltip title="Add Child">
+                        <IconButton edge="start" onClick={handleAdd(child)}>
+                            <AddCircle/>
+                        </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Delete category">
+                        <IconButton edge="end" onClick={handleDelete(child)}>
+                            <Delete/>
+                        </IconButton>
+                    </Tooltip>
                 </ListItemSecondaryAction>
             </ListItem>
             {
                 child.children.length > 0 &&
                 <List component="div" disablePadding>
                     <NestedList children={child.children}/>
-                    <ListItem style={{paddingLeft: 16*(child.lvl+1)}} button>
-                        <Icon className={classes.menuButton}>
-                            add_circle
-                        </Icon>
-                        <ListItemText primary="Add Category"/>
-                    </ListItem>
                 </List>
             }
         </div>
@@ -139,7 +214,14 @@ export default function EmployeeNav() {
         <Grid className={classes.root}>
             <AppBar position="sticky" color="inherit">
                 <Toolbar>
-                    <IconButton edge="start" className={classes.menuButton} color="inherit" aria-label="menu" onClick={toggleDrawer}>
+                    <IconButton 
+                        edge="start" 
+                        className={classes.menuButton} 
+                        color="inherit" 
+                        aria-label="menu" 
+                        onClick={toggleDrawer}
+                        disabled={!categories.length}
+                    >
                         <Menu />
                     </IconButton>
                     <Typography variant="h6" className={classes.title}>
@@ -149,6 +231,9 @@ export default function EmployeeNav() {
                         <Tab icon={<Storefront />} label="Merchants" id="simple-tab-1" aria-controls="simple-tabpanel-1" />
                         <Tab icon={<LocalShipping />} label="Shippers" id="simple-tab-2" aria-controls="simple-tabpanel-2"/>
                     </Tabs>
+                    <IconButton edge="end" color="inherit" onClick={toggleTheme}>
+                        { dark ? <Brightness7/> : <Brightness4/> }
+                    </IconButton>
                     <IconButton edge="end" color="inherit" onClick={handleLogout}>
                         <ExitToApp />
                     </IconButton>
@@ -230,18 +315,85 @@ export default function EmployeeNav() {
             <SwipeableDrawer
                 open={open}
                 anchor="left"
+                onOpen={toggleDrawer}
                 onClose={toggleDrawer}
             >
                 <List className={classes.list}>
                     <NestedList children={categories}/>
-                    <ListItem button>
-                        <Icon className={classes.menuButton}>
+                    <ListItem 
+                        button 
+                        onClick={
+                            handleAdd({
+                                cat_name: '',
+                                id: categories.length > 0 ? categories[0].parent_id : ''
+                            })
+                        }
+                    >
+                        <Icon className={classes.menuButton} >
                             add_circle
                         </Icon>
                         <ListItemText primary="Add Category"/>
                     </ListItem>
                 </List>
             </SwipeableDrawer>
+            <Dialog open={addModal} onClose={toggleModal}>
+                <DialogTitle>Create a new category</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Choose an icon from <Link
+                            href="https://material.io/resources/icons/?style=baseline"
+                            target="_blank"
+                            rel="noopener"
+                        >
+                            here.
+                        </Link>
+                    </DialogContentText>
+                    {
+                        !!category.parent_name &&
+                        <TextField
+                            label="Parent Category"
+                            type="text"
+                            margin="normal"
+                            fullWidth
+                            variant="outlined"
+                            value={category.parent_name}
+                            disabled={true}
+                        />
+                    }
+                    <TextField
+                        id="cat_name"
+                        margin="normal"
+                        label="Name of category"
+                        type="text"
+                        fullWidth
+                        variant="outlined"
+                        value={category.cat_name}
+                        onChange={handleCategoryChange}
+                    />
+                    <TextField
+                        id="cat_icon"
+                        margin="normal"
+                        label="Name of icon"
+                        type="text"
+                        fullWidth
+                        variant="outlined"
+                        value={category.cat_icon}
+                        onChange={handleCategoryChange}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={toggleModal} color="secondary">
+                        Cancel
+                    </Button>
+                    <Button 
+                        onClick={submitCategory} 
+                        color="primary"
+                        disabled={!category.cat_name || !category.cat_icon}
+                    >
+                        Submit
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Grid>
     )
 }
