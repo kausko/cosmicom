@@ -70,7 +70,7 @@ const search = async (req, res) => {
       if (rows.length > 0) {
         res.status(200).json(rows);
       } else if (rows.length == 0)
-        res.status(200).json({ msg: `No order with id = '{$order_id}' yet` });
+        res.status(200).json({ msg: `No order with given filters` });
     }
   } catch (err) {
     console.error(err.message);
@@ -113,15 +113,23 @@ const addToCart = async (req, res) => {
         `SELECT * from orders WHERE user_id='${user_id}' AND status='${ORDERING}'`
       );
       if (rows.length > 0) {
-        const { data } = await db.query(
-          `INSERT INTO orders (product_id,quantity) VALUES ($1,$2)`[
-            (product_id, quantity)
-          ]
+        const {
+          data,
+        } = await db.query(
+          `INSERT INTO orders (product_id,quantity) VALUES ($1,$2) WHERE status='${ORDERING}'`,
+          [product_id, quantity]
         );
         res.status(200).json(data);
       } else if (rows.length == 0) {
-        // new order id creation goes here
-        res.status(200).json({ msg: `No order with id = '{$order_id}' yet` });
+        const {
+          data,
+        } = await db.query(
+          `INSERT INTO orders (id,user_id,product_id,quantity,status) VALUES ($1,$2,$3,$4,"ORDERING")`,
+          [ObjectId().toString(), user_id, product_id, quantity]
+        );
+        res.status(200).json(data);
+      } else {
+        res.status(200).json('What to do ?');
       }
     }
   } catch (err) {
