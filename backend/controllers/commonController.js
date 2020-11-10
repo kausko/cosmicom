@@ -50,9 +50,14 @@ const categories = (req, res) =>
     )
     .then(({ rows }) => {
       // res.status(200).json(rows[0].json_tree.children);
-      res.status(200).json(rows.map(row => JSON.parse(row.jsonb_pretty).children).flat())
+      res
+        .status(200)
+        .json(rows.map((row) => JSON.parse(row.jsonb_pretty).children).flat());
     })
-    .catch((err) => res.status(500).json(err.message));
+    .catch((err) => {
+      console.log(err);
+      return res.status(500).json(err.message);
+    });
 
 const getProductsByCategory = async (req, res) => {
   try {
