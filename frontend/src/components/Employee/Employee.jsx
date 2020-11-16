@@ -87,7 +87,7 @@ export default function EmployeeNav() {
             console.log(res.data)
             setCategories(res.data)
         })
-        .catch(console.log)
+        .catch(err => enqueueSnackbar(err.message, { variant: 'error' }))
 
     React.useEffect(getCategories,[])
 
