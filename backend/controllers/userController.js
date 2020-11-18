@@ -3,6 +3,25 @@ const ObjectId = require('bson-objectid');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
+const getProfile = async (req, res) => {
+  try {
+    const { id, usertype } = jwt.verify(
+      req.headers.authorization.split(' ')[1],
+      process.env.JWTSECRET
+    );
+    if (usertype !== 'user') res.status(401).send('ACCESS DENIED');
+    else {
+      const { rows } = await db.query(
+        `SELECT * FROM users where id=$1`, [id]
+      )
+      res.status(200).send(rows)
+    }
+  }
+  catch (err) {
+    res.status(400).send(err.message)
+  }
+}
+
 const getAllOrders = async (req, res) => {
   try {
     const { id, usertype } = jwt.verify(
@@ -138,6 +157,7 @@ const addToCart = async (req, res) => {
   }
 };
 module.exports = {
+  getProfile,
   getAllOrders,
   getOrder,
   search,
