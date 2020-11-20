@@ -1,5 +1,5 @@
-import { AppBar, Drawer, CssBaseline, Icon, IconButton, List, ListItem, ListItemText, makeStyles, Toolbar, Typography, Dialog, DialogTitle, DialogContent, TextField, DialogActions, Button } from '@material-ui/core'
-import { Brightness4, Brightness7, ExitToApp } from '@material-ui/icons'
+import { AppBar, Grid, CssBaseline, Icon, IconButton, List, ListItem, ListItemText, makeStyles, Toolbar, Typography, Dialog, DialogTitle, DialogContent, TextField, DialogActions, Button, SwipeableDrawer, useMediaQuery } from '@material-ui/core'
+import { Brightness4, Brightness7, ExitToApp, Menu } from '@material-ui/icons'
 import Axios from 'axios'
 import MaterialTable from 'material-table'
 import { useSnackbar } from 'notistack'
@@ -10,31 +10,21 @@ import { ThemeContext } from '../../context/useTheme'
 const drawerWidth = 360;
 
 const useStyles = makeStyles((theme) => ({
-    root: {
-        display: 'flex',
-    },
     appBar: {
         zIndex: theme.zIndex.drawer + 1,
     },
     title: { flexGrow: 1 },
-    drawer: {
-        width: drawerWidth,
-        flexShrink: 0,
-    },
     drawerPaper: {
         width: drawerWidth,
     },
-    drawerContainer: {
-        overflow: 'auto',
-    },
-    content: {
-        flexGrow: 1,
-        padding: theme.spacing(3),
-    },
     menuButton: { marginRight: theme.spacing(2) },
-    table: { marginTop: theme.spacing(2) },
-    list: { width: 360 },
-    nested: { paddingLeft: theme.spacing(4) },
+    tableGrid: { 
+        marginTop: theme.spacing(9),
+        [theme.breakpoints.up('sm')]: {
+            paddingLeft: theme.spacing(1),
+            paddingRight: theme.spacing(1)
+        }
+    },
 }));
 
 const defaultProduct = {
@@ -42,6 +32,11 @@ const defaultProduct = {
     price: '',
     status: '',
     description: ''
+}
+
+const defaultSelectedCat = {
+    cat_name: 'All Products',
+    id: ''
 }
 
 export default function ClippedDrawer() {
@@ -54,12 +49,17 @@ export default function ClippedDrawer() {
 
     const { dark, toggleTheme } = useContext(ThemeContext)
 
+    const smUp = useMediaQuery(theme => theme.breakpoints.up('sm'))
+
     const [categories, setCategories] = useState([])
-    const [selectedCat, setSelectedCat] = useState('')
+    const [selectedCat, setSelectedCat] = useState(defaultSelectedCat)
     const [selectedProduct, setSelectedProduct] = useState('')
     const [addModal, setAddModal] = useState(false)
     const [submitLoading, setSubmitLoading] = useState(false)
     const [product, setProduct] = useState(defaultProduct)
+    const [open, setOpen] = useState(false)
+
+    const toggleDrawer = () => setOpen(!open)
 
     const handleProductChange = e => {
         let newProduct = {...product}
@@ -96,7 +96,7 @@ export default function ClippedDrawer() {
 
     const handleSelectCat = child => e => {
         if (child.children.length === 0) {
-            setSelectedCat(child.id)
+            setSelectedCat(child)
         }
     }
 
@@ -111,7 +111,7 @@ export default function ClippedDrawer() {
             <ListItem 
                 style={{ paddingLeft: 16 * child.lvl }} 
                 button={child.children.length === 0} 
-                selected={selectedCat === child.id && child.children.length === 0}
+                selected={selectedCat.id === child.id && child.children.length === 0}
                 onClick={handleSelectCat(child)}
                 disabled={child.children.length > 0}
             >
@@ -154,7 +154,7 @@ export default function ClippedDrawer() {
                 `http://localhost:8000/merchants/add-product`,
                 {
                     ...product,
-                    category_id: selectedCat
+                    category_id: selectedCat.id
                 },
                 {
                     headers: {
@@ -192,12 +192,22 @@ export default function ClippedDrawer() {
     }
 
     return (
-        <div className={classes.root}>
+        <Grid>
             <CssBaseline />
             <AppBar position="fixed" className={classes.appBar} color="inherit">
                 <Toolbar>
+                    <IconButton
+                        edge="start"
+                        className={classes.menuButton}
+                        color="inherit"
+                        aria-label="menu"
+                        onClick={toggleDrawer}
+                        disabled={!categories.length}
+                    >
+                        <Menu/>
+                    </IconButton>
                     <Typography variant="h6" noWrap className={classes.title}>
-                        Merchant Administration Panel
+                        Merchant Admin
                     </Typography>
                     <IconButton edge="end" color="inherit" onClick={toggleTheme}>
                         {dark ? <Brightness7 /> : <Brightness4 />}
@@ -207,27 +217,23 @@ export default function ClippedDrawer() {
                     </IconButton>
                 </Toolbar>
             </AppBar>
-            <Drawer
-                className={classes.drawer}
-                variant="permanent"
-                classes={{
-                    paper: classes.drawerPaper,
-                }}
+            <SwipeableDrawer
+                open={open}
+                anchor="left"
+                onOpen={toggleDrawer}
+                onClose={toggleDrawer}
             >
-                <Toolbar />
-                <div className={classes.drawerContainer}>
-                    <List>
-                        <NestedList children={categories}/>
-                    </List>
-                </div>
-            </Drawer>
-            <main className={classes.content}>
-                <Toolbar />
+                <List className={classes.drawerPaper}>
+                    <NestedList children={categories}/>
+                </List>
+            </SwipeableDrawer>
+            <Grid container={smUp} justify="space-evenly" alignItems="center" className={classes.tableGrid}>
+                <Grid item xs={12}>
                 <MaterialTable
                         tableRef={tableRef}
                         data={
                             query => new Promise((resolve, reject) => {
-                                let url = `http://localhost:8000/merchants/${!!selectedCat ? selectedCat : 'products'}/${query.page + 1}`
+                                let url = `http://localhost:8000/merchants/${!!selectedCat.id ? selectedCat.id : 'products'}/${query.page + 1}`
                                 let token = sessionStorage.getItem('token')
                                 Axios.get(url, {
                                     headers: {
@@ -244,7 +250,7 @@ export default function ClippedDrawer() {
                                 .catch(err => reject(err.message))
                             })
                         }
-                        title='Products'
+                        title={selectedCat.cat_name}
                         options={{
                             actionsColumnIndex: -1,
                             pageSize: 10,
@@ -296,19 +302,21 @@ export default function ClippedDrawer() {
                                 tooltip: 'Add Product',
                                 isFreeAction: true,
                                 onClick: toggleModal,
-                                hidden: !selectedCat
+                                hidden: !selectedCat.id
                             },
                             {
                                 icon: 'cancel',
                                 tooltip: 'Reset selection',
                                 isFreeAction: true,
                                 onClick: (e, data) => {
-                                    setSelectedCat('')
+                                    setSelectedCat(defaultSelectedCat)
                                 },
-                                hidden: !selectedCat
+                                hidden: !selectedCat.id
                             }
                         ]}
                     />
+                </Grid>
+            </Grid>
                 <Dialog open={addModal} onClose={toggleModal}>
                     <DialogTitle>
                         {!!selectedProduct ? "Edit Product" : "Add a new product"}
@@ -349,7 +357,6 @@ export default function ClippedDrawer() {
                         </Button>
                     </DialogActions>
                 </Dialog>
-            </main>
-        </div>
+        </Grid>
     );
 }
