@@ -40,7 +40,7 @@ const useStyles = makeStyles((theme) => ({
     height: '100%',
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'center'
   },
   form: {
     width: '100%', // Fix IE 11 issue.
@@ -58,6 +58,9 @@ const useStyles = makeStyles((theme) => ({
     left: theme.spacing(2),
     backgroundColor: theme.palette.background.paper,
     color: theme.palette.text.primary,
+    [theme.breakpoints.down('md')]: {
+      boxShadow: 'none'
+    }
   }
 }));
 

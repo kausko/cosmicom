@@ -4,6 +4,9 @@ import Login from './Auth/login';
 import Register from './Auth/register';
 import Employee from './Employee/Employee';
 import Shipper from './Shipper/Shipper';
+import Merchant from './Merchant/merchant';
+import User from './User/Navbar';
+
 export default function Routes() {
   return (
     <BrowserRouter>
@@ -11,7 +14,9 @@ export default function Routes() {
         <Route exact path='/' component={Login} />
         <Route path='/register' component={Register} />
         <Route path='/employee' component={Employee} />
+        <Route path='/merchant' component={Merchant} />
         <Route path='/shipper' component={Shipper} />
+        <Route path='/user' component={User} />
       </Switch>
     </BrowserRouter>
   );

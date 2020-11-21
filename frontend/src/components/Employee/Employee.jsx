@@ -1,6 +1,6 @@
 import React from 'react'
 import { makeStyles } from '@material-ui/styles'
-import { AppBar, Toolbar, IconButton, Typography, Tab, Tabs, Grid, SwipeableDrawer, List, ListItem, ListItemText, Icon, ListItemSecondaryAction, Dialog, DialogTitle, DialogContent, DialogContentText, Link, TextField, DialogActions, Button, Tooltip } from '@material-ui/core'
+import { AppBar, Toolbar, IconButton, Typography, Tab, Tabs, Grid, SwipeableDrawer, List, ListItem, ListItemText, Icon, ListItemSecondaryAction, Dialog, DialogTitle, DialogContent, DialogContentText, Link, TextField, DialogActions, Button, Tooltip, Hidden, BottomNavigation, BottomNavigationAction, useMediaQuery } from '@material-ui/core'
 import MaterialTable from 'material-table'
 import { Menu, LocalShipping, Storefront, ExitToApp, Delete, Brightness7, Brightness4, AddCircle } from '@material-ui/icons';
 import { useHistory } from 'react-router-dom';
@@ -10,10 +10,19 @@ import { ThemeContext } from '../../context/useTheme';
 import { useSnackbar } from 'notistack'
 
 const useStyles = makeStyles(theme => ({
-    root: { flexGrow: 1 },
+    root: { flex: 1 },
+    appBar: {
+        top: 'auto',
+        bottom: 0,
+    },
     menuButton: { marginRight: theme.spacing(2) },
     title: { flexGrow: 1 },
-    table: { marginTop: theme.spacing(2) },
+    tableGrid: { 
+        marginTop: theme.spacing(2),
+        [theme.breakpoints.down('sm')]: {
+            marginBottom: theme.spacing(9)
+        } 
+    },
     list: { width: 360 },
     nested: { paddingLeft: theme.spacing(4) }
 }))
@@ -42,7 +51,9 @@ export default function EmployeeNav() {
     const unRef = React.createRef();
     const apRef = React.createRef();
 
-    const {dark, toggleTheme} = useContext(ThemeContext)
+    const { dark, toggleTheme } = useContext(ThemeContext)
+
+    const smUp = useMediaQuery(theme => theme.breakpoints.up('sm'))
 
     const [value, setValue] = React.useState(0)
     const [open, setOpen] = React.useState(false)
@@ -73,7 +84,7 @@ export default function EmployeeNav() {
         history.push('/')
     }
 
-    const getCategories = () => 
+    const getCategories = () =>
         Axios.get(
             'http://localhost:8000/employees/categories',
             {
@@ -83,15 +94,15 @@ export default function EmployeeNav() {
                 }
             }
         )
-        .then(res => {
-            console.log(res.data)
-            setCategories(res.data)
-        })
-        .catch(console.log)
+            .then(res => {
+                console.log(res.data)
+                setCategories(res.data)
+            })
+            .catch(err => enqueueSnackbar(err.message, { variant: 'error' }))
 
-    React.useEffect(getCategories,[])
+    React.useEffect(getCategories, [])
 
-    const patchRow = (e, rowData) => 
+    const patchRow = (e, rowData) =>
         Axios.patch(
             `http://localhost:8000/employees/${value ? 'shippers' : 'merchants'}/${rowData.id}`,
             null,
@@ -102,27 +113,27 @@ export default function EmployeeNav() {
                 }
             }
         )
-        .then(res => {
-            unRef.current.onChangePage(e, 0)
-            apRef.current.onChangePage(e, 0)
-        })
-        .catch(err => enqueueSnackbar(err.message, { variant: 'error'}))
+            .then(res => {
+                unRef.current.onChangePage(e, 0)
+                apRef.current.onChangePage(e, 0)
+            })
+            .catch(err => enqueueSnackbar(err.message, { variant: 'error' }))
 
     const deleteRow = (e, rowData, ref) => {
         if (window.confirm("Do you want to reject " + rowData.name + " ?"))
-        Axios.delete(
-            `http://localhost:8000/employees/${value ? 'shippers' : 'merchants'}/${rowData.id}`,
-            {
-                headers: {
-                    "Authorization": `Bearer ${sessionStorage.getItem('token')}`,
-                    "Content-Type": 'application/json'
+            Axios.delete(
+                `http://localhost:8000/employees/${value ? 'shippers' : 'merchants'}/${rowData.id}`,
+                {
+                    headers: {
+                        "Authorization": `Bearer ${sessionStorage.getItem('token')}`,
+                        "Content-Type": 'application/json'
+                    }
                 }
-            }
-        )
-        .then(res => {
-            ref.current.onChangePage(e, 0)
-        })
-        .catch(err => enqueueSnackbar(err.message, { variant: 'error'}))
+            )
+                .then(res => {
+                    ref.current.onChangePage(e, 0)
+                })
+                .catch(err => enqueueSnackbar(err.message, { variant: 'error' }))
     }
 
     const handleAdd = parent => e => {
@@ -154,16 +165,16 @@ export default function EmployeeNav() {
                 }
             }
         )
-        .then(getCategories)
-        .then(() => {
-            enqueueSnackbar('Category added successfully', { variant: 'success'})
-        })
-        .catch(err => enqueueSnackbar(err.message, { variant: 'error'}))
-        .finally(toggleModal)
+            .then(getCategories)
+            .then(() => {
+                enqueueSnackbar('Category added successfully', { variant: 'success' })
+            })
+            .catch(err => enqueueSnackbar(err.message, { variant: 'error' }))
+            .finally(toggleModal)
     }
 
     const handleDelete = child => e => {
-        if(window.confirm(`Delete category ${child.cat_name}?`)){
+        if (window.confirm(`Delete category ${child.cat_name}?`)) {
             Axios.delete(
                 `http://localhost:8000/employees/categories/${child.id}`,
                 {
@@ -173,30 +184,30 @@ export default function EmployeeNav() {
                     }
                 }
             )
-            .then(getCategories)
-            .then(() => {
-                enqueueSnackbar('Category removed successfully', { variant: 'info'})
-            })
-            .catch(err => enqueueSnackbar(err.message, { variant: 'error' }))
+                .then(getCategories)
+                .then(() => {
+                    enqueueSnackbar('Category removed successfully', { variant: 'info' })
+                })
+                .catch(err => enqueueSnackbar(err.message, { variant: 'error' }))
         }
     }
 
-    const NestedList = ({children}) => children.map((child, index) => 
+    const NestedList = ({ children }) => children.map((child, index) =>
         <div key={index}>
-            <ListItem style={{paddingLeft: 16*child.lvl}}>
+            <ListItem style={{ paddingLeft: 16 * child.lvl }}>
                 <Icon className={classes.menuButton}>
                     {child.cat_icon}
                 </Icon>
-                <ListItemText primary={child.cat_name}/>
+                <ListItemText primary={child.cat_name} />
                 <ListItemSecondaryAction>
                     <Tooltip title="Add Child">
                         <IconButton edge="start" onClick={handleAdd(child)}>
-                            <AddCircle/>
+                            <AddCircle />
                         </IconButton>
                     </Tooltip>
                     <Tooltip title="Delete category">
                         <IconButton edge="end" onClick={handleDelete(child)}>
-                            <Delete/>
+                            <Delete />
                         </IconButton>
                     </Tooltip>
                 </ListItemSecondaryAction>
@@ -204,42 +215,44 @@ export default function EmployeeNav() {
             {
                 child.children.length > 0 &&
                 <List component="div" disablePadding>
-                    <NestedList children={child.children}/>
+                    <NestedList children={child.children} />
                 </List>
             }
         </div>
     )
 
     return (
-        <Grid className={classes.root}>
+        <Grid >
             <AppBar position="sticky" color="inherit">
                 <Toolbar>
-                    <IconButton 
-                        edge="start" 
-                        className={classes.menuButton} 
-                        color="inherit" 
-                        aria-label="menu" 
+                    <IconButton
+                        edge="start"
+                        className={classes.menuButton}
+                        color="inherit"
+                        aria-label="menu"
                         onClick={toggleDrawer}
                         disabled={!categories.length}
                     >
                         <Menu />
                     </IconButton>
                     <Typography variant="h6" className={classes.title}>
-                        Employee Administration Panel
+                        Employee Admin
                     </Typography>
-                    <Tabs value={value} onChange={handleTabChange} aria-label="simple tabs example">
-                        <Tab icon={<Storefront />} label="Merchants" id="simple-tab-1" aria-controls="simple-tabpanel-1" />
-                        <Tab icon={<LocalShipping />} label="Shippers" id="simple-tab-2" aria-controls="simple-tabpanel-2"/>
-                    </Tabs>
+                    <Hidden smDown>
+                        <Tabs value={value} onChange={handleTabChange} aria-label="simple tabs example">
+                            <Tab icon={<Storefront />} label="Merchants" id="simple-tab-1" aria-controls="simple-tabpanel-1" />
+                            <Tab icon={<LocalShipping />} label="Shippers" id="simple-tab-2" aria-controls="simple-tabpanel-2" />
+                        </Tabs>
+                    </Hidden>
                     <IconButton edge="end" color="inherit" onClick={toggleTheme}>
-                        { dark ? <Brightness7/> : <Brightness4/> }
+                        {dark ? <Brightness7 /> : <Brightness4 />}
                     </IconButton>
                     <IconButton edge="end" color="inherit" onClick={handleLogout}>
                         <ExitToApp />
                     </IconButton>
                 </Toolbar>
             </AppBar>
-            <Grid container direction="row" justify="space-evenly" alignItems="center" className={classes.table}>
+            <Grid container={smUp} direction="row" justify="space-evenly" alignItems="center" className={classes.tableGrid}>
                 <Grid item md={5}>
                     <MaterialTable
                         {...tableProps}
@@ -278,13 +291,13 @@ export default function EmployeeNav() {
                         ]}
                     />
                 </Grid>
-                <Grid item md={5}>
+                <Grid item md={5} style={{marginTop: smUp ? 0 : '16px'}}>
                     <MaterialTable
                         {...tableProps}
                         tableRef={apRef}
                         data={
                             query => new Promise((resolve, reject) => {
-                                let url = `http://localhost:8000/employees/${value?'shippers':'merchants'}/true/${query.page + 1}`
+                                let url = `http://localhost:8000/employees/${value ? 'shippers' : 'merchants'}/true/${query.page + 1}`
                                 let token = sessionStorage.getItem('token')
                                 Axios.get(url, {
                                     headers: {
@@ -319,9 +332,9 @@ export default function EmployeeNav() {
                 onClose={toggleDrawer}
             >
                 <List className={classes.list}>
-                    <NestedList children={categories}/>
-                    <ListItem 
-                        button 
+                    <NestedList children={categories} />
+                    <ListItem
+                        button
                         onClick={
                             handleAdd({
                                 cat_name: '',
@@ -332,7 +345,7 @@ export default function EmployeeNav() {
                         <Icon className={classes.menuButton} >
                             add_circle
                         </Icon>
-                        <ListItemText primary="Add Category"/>
+                        <ListItemText primary="Add Category" />
                     </ListItem>
                 </List>
             </SwipeableDrawer>
@@ -385,8 +398,8 @@ export default function EmployeeNav() {
                     <Button onClick={toggleModal} color="secondary">
                         Cancel
                     </Button>
-                    <Button 
-                        onClick={submitCategory} 
+                    <Button
+                        onClick={submitCategory}
                         color="primary"
                         disabled={!category.cat_name || !category.cat_icon}
                     >
@@ -394,6 +407,16 @@ export default function EmployeeNav() {
                     </Button>
                 </DialogActions>
             </Dialog>
+            <Hidden mdUp>
+                <AppBar position="fixed" color="inherit" className={classes.appBar}>
+                    <Toolbar>
+                        <BottomNavigation value={value} onChange={handleTabChange} className={classes.root} showLabels>
+                            <BottomNavigationAction icon={<Storefront />} label="Merchants" />
+                            <BottomNavigationAction icon={<LocalShipping />} label="Shipping" />
+                        </BottomNavigation>
+                    </Toolbar>
+                </AppBar>
+            </Hidden>
         </Grid>
     )
 }

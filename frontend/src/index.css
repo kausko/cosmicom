@@ -11,3 +11,7 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+.Component-horizontalScrollContainer-19 ::-webkit-scrollbar-thumb {
+  border: none !important;
+}

@@ -61,6 +61,9 @@ const useStyles = makeStyles((theme) => ({
     left: theme.spacing(2),
     backgroundColor: theme.palette.background.paper,
     color: theme.palette.text.primary,
+    [theme.breakpoints.down('md')]: {
+      boxShadow: 'none'
+    }
   }
 }));
 

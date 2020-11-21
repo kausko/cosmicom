@@ -12,6 +12,7 @@ router.use((req, res, next) => {
   );
   next();
 });
+router.get('/', auth, user.getProfile);
 router.get('/categories', auth, common.categories);
 router.get('/:category_id/:page', auth, common.getProductsByCategory);
 router.get('/product/:id', auth, common.getProductDetails);
