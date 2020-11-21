@@ -200,9 +200,9 @@ export default function ShipperNav() {
             tableRef={apRef}
             data={(query) =>
               new Promise((resolve, reject) => {
-                let url = `http://localhost:8000/employees/${
-                  value ? 'shippers' : 'merchants'
-                }/true/${query.page + 1}`;
+                let url = `http://localhost:8000/shipper/${query.status}/${
+                  query.page + 1
+                }`;
                 let token = sessionStorage.getItem('token');
                 Axios.get(url, {
                   headers: {
@@ -213,6 +213,7 @@ export default function ShipperNav() {
                     return resolve({
                       data: res.data,
                       page: query.page,
+                      orderStatus: query.status,
                       totalCount: parseInt(res.data[0].totalcount),
                     });
                   })

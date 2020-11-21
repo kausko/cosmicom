@@ -11,13 +11,14 @@ const shipperOrders = async (req, res) => {
     );
 
     const page = parseInt(req.params.page);
-
+    const status = req.params.status;
     if (usertype !== 'shipper') res.status(401).send('ACCESS DENIED');
     else {
       const { rows } = await db.query(
         `SELECT * FROM orders 
                 WHERE shipper_id = '${id}'
                 AND status != 'ORDERING'
+                AND status = '${status}'
                 ORDER BY created_at 
                 LIMIT 10 OFFSET ${10 * (page - 1)}`
       );
