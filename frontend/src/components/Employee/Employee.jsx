@@ -82,8 +82,8 @@ export default function EmployeeNav() {
 
   const history = useHistory();
 
-  const unRef = React.createRef();
-  const apRef = React.createRef();
+  const unRef = React.useRef();
+  const apRef = React.useRef();
 
   const { dark, toggleTheme } = useContext(ThemeContext);
 
@@ -131,6 +131,7 @@ export default function EmployeeNav() {
       })
       .catch((err) => enqueueSnackbar(err.message, { variant: 'error' }));
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   React.useEffect(getCategories, []);
 
   const patchRow = (e, rowData) =>
@@ -374,7 +375,7 @@ export default function EmployeeNav() {
               {
                 icon: 'delete',
                 tooltip: 'Delete User',
-                onClick: (e, rowData) => deleteRow(e, rowData, unRef),
+                onClick: (e, rowData) => deleteRow(e, rowData, apRef),
               },
             ]}
           />

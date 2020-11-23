@@ -13,5 +13,5 @@ router.use((req, res, next) => {
 });
 
 router.get('/:status/:page', auth, order.shipperOrders);
-router.post('/orders/:status/:id', auth, order.shipperOrderUpdate);
+router.patch('/orders/:status/:id', auth, order.shipperOrderUpdate);
 module.exports = router;

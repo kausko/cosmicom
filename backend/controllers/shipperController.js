@@ -31,7 +31,6 @@ const shipperOrders = async (req, res) => {
       LIMIT 10 
       OFFSET ${10 * (page - 1)}`
       );
-      console.log(rows);
       res.status(200).json(rows);
     }
   } catch (err) {

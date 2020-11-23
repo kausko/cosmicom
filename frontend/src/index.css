@@ -15,3 +15,7 @@ code {
 .Component-horizontalScrollContainer-19 ::-webkit-scrollbar-thumb {
   border: none !important;
 }
+
+::-webkit-scrollbar-thumb {
+  border: none !important;
+}

@@ -8,32 +8,17 @@ import {
   Tab,
   Tabs,
   Grid,
-  SwipeableDrawer,
-  List,
-  ListItem,
-  ListItemText,
-  Icon,
-  ListItemSecondaryAction,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  Link,
-  TextField,
-  DialogActions,
-  Button,
-  Tooltip,
+  useMediaQuery,
+  CssBaseline,
+  Hidden,
+  BottomNavigation,
+  BottomNavigationAction,
 } from '@material-ui/core';
 import MaterialTable from 'material-table';
 import {
-  Menu,
-  LocalShipping,
-  Storefront,
   ExitToApp,
-  Delete,
   Brightness7,
   Brightness4,
-  AddCircle,
 } from '@material-ui/icons';
 import ShoppingCartIcon from '@material-ui/icons/ShoppingCart';
 import CheckIcon from '@material-ui/icons/Check';
@@ -47,11 +32,19 @@ import { useSnackbar } from 'notistack';
 
 const useStyles = makeStyles((theme) => ({
   root: { flexGrow: 1 },
-  menuButton: { marginRight: theme.spacing(2) },
+  appBar: {
+    top: 'auto',
+    bottom: 0,
+  },
   title: { flexGrow: 1 },
-  table: { marginTop: theme.spacing(2) },
-  list: { width: 360 },
   nested: { paddingLeft: theme.spacing(4) },
+  tableGrid: { 
+    marginTop: theme.spacing(10),
+    [theme.breakpoints.up('sm')]: {
+        paddingLeft: theme.spacing(1),
+        paddingRight: theme.spacing(1)
+    }
+},
 }));
 
 const tableProps = {
@@ -79,18 +72,16 @@ export default function ShipperNav() {
 
   const history = useHistory();
 
-  const unRef = React.useRef();
   const apRef = React.useRef();
 
   const { dark, toggleTheme } = useContext(ThemeContext);
 
+  const smUp = useMediaQuery(theme => theme.breakpoints.up('sm'))
+
   const [value, setValue] = React.useState(0);
-  const [open, setOpen] = React.useState(false);
-  const [categories, setCategories] = React.useState([]);
 
   const { enqueueSnackbar } = useSnackbar();
 
-  const toggleDrawer = () => setOpen(!open);
 
   const handleTabChange = (e, newVal) => {
     setValue(newVal);
@@ -104,13 +95,10 @@ export default function ShipperNav() {
 
   const patchRow = (e, rowData) =>
     Axios.patch(
-      `http://localhost:8000//shipper/orders/${
-        rowData.status === 'ordered'
-          ? 'packed'
-          : rowData.status === 'packed'
+      `http://localhost:8000/shipper/orders/${rowData.status === 'ordered'
+        ? 'packed'
+        : rowData.status === 'packed'
           ? 'dispatched'
-          : rowData.status === 'dispatched'
-          ? 'delivered'
           : 'delivered'
       }/${rowData.id}`,
       null,
@@ -128,11 +116,10 @@ export default function ShipperNav() {
 
   const deleteRow = (e, rowData, ref) => {
     console.log(rowData);
-    if (window.confirm('Do you want to cancel this order ?'))
-      Axios.post(
-        `http://localhost:8000/shipper/orders/${
-          rowData.status ? 'cancelled' : 'cancelled'
-        }/${rowData.id}`,
+    if (window.confirm('Do you want to cancel this order ?')) {
+      Axios.patch(
+        `http://localhost:8000/shipper/orders/cancelled/${rowData.id}`,
+        {},
         {
           headers: {
             Authorization: `Bearer ${sessionStorage.getItem('token')}`,
@@ -143,16 +130,22 @@ export default function ShipperNav() {
         .then((res) => {
           ref.current.onChangePage(e, 0);
         })
-        .catch((err) => enqueueSnackbar(err.message, { variant: 'error' }));
+        .catch((err) => {
+          console.log(Object.values(err))
+          enqueueSnackbar(err.message, { variant: 'error' })
+        })
+    }
   };
 
   return (
-    <Grid className={classes.root}>
-      <AppBar position='sticky' color='inherit'>
+    <Grid>
+      <CssBaseline/>
+      <AppBar position='fixed' color='inherit'>
         <Toolbar>
           <Typography variant='h6' className={classes.title}>
-            Shipper Administration Panel
+            Shipper Admin
           </Typography>
+          <Hidden smDown>
           <Tabs
             value={value}
             onChange={handleTabChange}
@@ -183,6 +176,7 @@ export default function ShipperNav() {
               aria-controls='simple-tabpanel-4'
             />
           </Tabs>
+          </Hidden>
           <IconButton edge='end' color='inherit' onClick={toggleTheme}>
             {dark ? <Brightness7 /> : <Brightness4 />}
           </IconButton>
@@ -191,28 +185,21 @@ export default function ShipperNav() {
           </IconButton>
         </Toolbar>
       </AppBar>
-      <Grid
-        container
-        direction='row'
-        justify='space-evenly'
-        alignItems='center'
-        className={classes.table}
-      >
-        <Grid item md={5}>
+      <Grid container={smUp} justify="space-evenly" alignItems="center" className={classes.tableGrid}>
+        <Grid item xs={12}>
           <MaterialTable
             {...tableProps}
             tableRef={apRef}
             data={(query) =>
               new Promise((resolve, reject) => {
-                let url = `http://localhost:8000/shipper/${
-                  value === 0
-                    ? 'ordered'
-                    : value === 1
+                let url = `http://localhost:8000/shipper/${value === 0
+                  ? 'ordered'
+                  : value === 1
                     ? 'packed'
                     : value === 2
-                    ? 'dispatched'
-                    : 'delivered'
-                }/${query.page + 1}`;
+                      ? 'dispatched'
+                      : 'delivered'
+                  }/${query.page + 1}`;
                 let token = sessionStorage.getItem('token');
                 Axios.get(url, {
                   headers: {
@@ -220,7 +207,6 @@ export default function ShipperNav() {
                   },
                 })
                   .then((res) => {
-                    console.log(res.data);
                     return resolve({
                       data: res.data,
                       page: query.page,
@@ -233,31 +219,43 @@ export default function ShipperNav() {
               })
             }
             title='ORDERS'
-            actions={[
+            actions={value !== 3 && [
               {
                 icon: 'check-icon',
-                tooltip: `${
-                  value === 0
+                tooltip: `${value === 0
                     ? 'Pack Order'
                     : value === 1
-                    ? 'Dispatch Order'
-                    : value === 2
-                    ? 'Deliver Order'
-                    : 'Deliver Order'
-                }`,
-                // disabled: `${value === 3}`,
-                onClick: (e, rowData) => deleteRow(e, rowData, apRef),
+                      ? 'Dispatch Order'
+                      : 'Deliver Order'
+                  }`,
+                onClick: (e, rowData) => patchRow(e, rowData, apRef),
               },
               {
                 icon: 'delete',
                 tooltip: 'Cancel Order',
-                // disabled: `${value === 3}`,
-                onClick: (e, rowData) => patchRow(e, rowData, apRef),
+                onClick: (e, rowData) => deleteRow(e, rowData, apRef),
               },
             ]}
           />
         </Grid>
       </Grid>
+      <Hidden mdUp>
+        <AppBar position='fixed' color='inherit' className={classes.appBar}>
+          <Toolbar>
+            <BottomNavigation
+              value={value}
+              onChange={handleTabChange}
+              className={classes.root}
+              showLabels
+            >
+              <BottomNavigationAction icon={<ShoppingCartIcon/>} label='Ordered'/>
+              <BottomNavigationAction icon={<CheckIcon/>} label='Packed'/>
+              <BottomNavigationAction icon={<FlightTakeoffIcon/>} label='Dispatched'/>
+              <BottomNavigationAction icon={<FlightLandIcon/>} label='Delivered'/>
+            </BottomNavigation>
+          </Toolbar>
+        </AppBar>
+      </Hidden>
     </Grid>
   );
 }
