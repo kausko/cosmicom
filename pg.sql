@@ -1,6 +1,6 @@
 CREATE TABLE "orders" (
   "id" varchar PRIMARY KEY,
-  "user_id" varchar UNIQUE NOT NULL,
+  "user_id" varchar NOT NULL,
   "status" varchar,
   "created_at" date,
   "netAmt" bigint,
@@ -58,7 +58,7 @@ CREATE TABLE "countries" (
   "code" varchar PRIMARY KEY,
   "name" varchar,
   "dial_code" varchar
-);
+);UNIQUE
 
 CREATE TABLE "employees" (
   "id" varchar PRIMARY KEY,

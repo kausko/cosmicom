@@ -15,17 +15,24 @@ const shipperOrders = async (req, res) => {
     if (usertype !== 'shipper') res.status(401).send('ACCESS DENIED');
     else {
       const { rows } = await db.query(
-        `SELECT * FROM orders 
-                WHERE shipper_id = '${id}'
-                AND status != 'ORDERING'
-                AND status = '${status}'
-                ORDER BY created_at 
-                LIMIT 10 OFFSET ${10 * (page - 1)}`
+        `WITH Data_CTE AS ( 
+          SELECT users.name,users.email,orders.id,status,"netAmt","paymentMode"
+          FROM orders LEFT JOIN users 
+          ON users.id = orders.user_id 
+          WHERE
+          status='${status}' AND 
+          shipper_id='${id}' 
+      ),
+      Count_CTE AS (
+          SELECT COUNT(*) AS totalCount FROM Data_CTE
+      )
+      SELECT * FROM Data_CTE
+      CROSS JOIN Count_CTE
+      LIMIT 10 
+      OFFSET ${10 * (page - 1)}`
       );
-      if (rows.length > 0) {
-        res.status(200).json(rows);
-      } else if (rows.length == 0)
-        res.status(200).json({ msg: 'No order yet' });
+      console.log(rows);
+      res.status(200).json(rows);
     }
   } catch (err) {
     console.error(err.message);
@@ -38,14 +45,12 @@ const shipperOrderUpdate = async (req, res) => {
       req.headers.authorization.split(' ')[1],
       process.env.JWTSECRET
     );
-
     if (usertype !== 'shipper') res.status(401).send('ACCESS DENIED');
     else {
-      const { orderid } = req.params;
       console.log(typeof orderid);
       const result = await db.query(
-        'UPDATE orders SET status= $1 WHERE id= $2 AND shipper_id= $3',
-        [req.body.status, orderid, id]
+        'UPDATE orders SET status = $1 WHERE id = $2 AND shipper_id = $3',
+        [req.params.status, req.params.id, id]
       );
       if (result.rowCount === 0)
         res.status(422).send(`Order with id: ${id} not found`);

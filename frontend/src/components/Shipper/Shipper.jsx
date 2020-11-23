@@ -56,12 +56,12 @@ const useStyles = makeStyles((theme) => ({
 
 const tableProps = {
   columns: [
-    { title: 'UserName', field: 'username', filtering: false, sorting: false },
+    { title: 'UserName', field: 'name', filtering: false, sorting: false },
     { title: 'Email', field: 'email', filtering: false, sorting: false },
     { title: 'Net Amount', field: 'netAmt', filtering: false, sorting: false },
     {
       title: 'Payment Mode',
-      field: 'payMod',
+      field: 'paymentMode',
       filtering: false,
       sorting: false,
     },
@@ -79,15 +79,14 @@ export default function ShipperNav() {
 
   const history = useHistory();
 
-  const unRef = React.createRef();
-  const apRef = React.createRef();
+  const unRef = React.useRef();
+  const apRef = React.useRef();
 
   const { dark, toggleTheme } = useContext(ThemeContext);
 
   const [value, setValue] = React.useState(0);
   const [open, setOpen] = React.useState(false);
   const [categories, setCategories] = React.useState([]);
-  const [orderStatus, setOrderStatus] = React.useState('');
 
   const { enqueueSnackbar } = useSnackbar();
 
@@ -95,7 +94,6 @@ export default function ShipperNav() {
 
   const handleTabChange = (e, newVal) => {
     setValue(newVal);
-    unRef.current.onChangePage(e, 0);
     apRef.current.onChangePage(e, 0);
   };
 
@@ -106,9 +104,15 @@ export default function ShipperNav() {
 
   const patchRow = (e, rowData) =>
     Axios.patch(
-      `http://localhost:8000/employees/${value ? 'shippers' : 'merchants'}/${
-        rowData.id
-      }`,
+      `http://localhost:8000//shipper/orders/${
+        rowData.status === 'ordered'
+          ? 'packed'
+          : rowData.status === 'packed'
+          ? 'dispatched'
+          : rowData.status === 'dispatched'
+          ? 'delivered'
+          : 'delivered'
+      }/${rowData.id}`,
       null,
       {
         headers: {
@@ -118,17 +122,17 @@ export default function ShipperNav() {
       }
     )
       .then((res) => {
-        unRef.current.onChangePage(e, 0);
         apRef.current.onChangePage(e, 0);
       })
       .catch((err) => enqueueSnackbar(err.message, { variant: 'error' }));
 
   const deleteRow = (e, rowData, ref) => {
-    if (window.confirm('Do you want to reject ' + rowData.name + ' ?'))
-      Axios.delete(
-        `http://localhost:8000/employees/${value ? 'shippers' : 'merchants'}/${
-          rowData.id
-        }`,
+    console.log(rowData);
+    if (window.confirm('Do you want to cancel this order ?'))
+      Axios.post(
+        `http://localhost:8000/shipper/orders/${
+          rowData.status ? 'cancelled' : 'cancelled'
+        }/${rowData.id}`,
         {
           headers: {
             Authorization: `Bearer ${sessionStorage.getItem('token')}`,
@@ -200,9 +204,15 @@ export default function ShipperNav() {
             tableRef={apRef}
             data={(query) =>
               new Promise((resolve, reject) => {
-                let url = `http://localhost:8000/shipper/${query.status}/${
-                  query.page + 1
-                }`;
+                let url = `http://localhost:8000/shipper/${
+                  value === 0
+                    ? 'ordered'
+                    : value === 1
+                    ? 'packed'
+                    : value === 2
+                    ? 'dispatched'
+                    : 'delivered'
+                }/${query.page + 1}`;
                 let token = sessionStorage.getItem('token');
                 Axios.get(url, {
                   headers: {
@@ -210,11 +220,13 @@ export default function ShipperNav() {
                   },
                 })
                   .then((res) => {
+                    console.log(res.data);
                     return resolve({
                       data: res.data,
                       page: query.page,
-                      orderStatus: query.status,
-                      totalCount: parseInt(res.data[0].totalcount),
+                      totalCount: res.data.length
+                        ? parseInt(res.data[0].totalcount)
+                        : 0,
                     });
                   })
                   .catch((err) => reject(err.message));
@@ -223,9 +235,24 @@ export default function ShipperNav() {
             title='ORDERS'
             actions={[
               {
+                icon: 'check-icon',
+                tooltip: `${
+                  value === 0
+                    ? 'Pack Order'
+                    : value === 1
+                    ? 'Dispatch Order'
+                    : value === 2
+                    ? 'Deliver Order'
+                    : 'Deliver Order'
+                }`,
+                // disabled: `${value === 3}`,
+                onClick: (e, rowData) => deleteRow(e, rowData, apRef),
+              },
+              {
                 icon: 'delete',
-                tooltip: 'Delete User',
-                onClick: (e, rowData) => deleteRow(e, rowData, unRef),
+                tooltip: 'Cancel Order',
+                // disabled: `${value === 3}`,
+                onClick: (e, rowData) => patchRow(e, rowData, apRef),
               },
             ]}
           />
