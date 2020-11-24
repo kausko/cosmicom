@@ -6,7 +6,7 @@ import Employee from './Employee/Employee';
 import Shipper from './Shipper/Shipper';
 import Merchant from './Merchant/merchant';
 import User from './User/Navbar';
-
+import Order from './User/UserRoutes/Order';
 export default function Routes() {
   return (
     <BrowserRouter>
@@ -17,6 +17,7 @@ export default function Routes() {
         <Route path='/merchant' component={Merchant} />
         <Route path='/shipper' component={Shipper} />
         <Route path='/user' component={User} />
+        <Route path='/my-order' component={Order} />
       </Switch>
     </BrowserRouter>
   );
