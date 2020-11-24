@@ -45,13 +45,16 @@ const getAllOrders = async (req, res) => {
     res.status(500).send('Server error');
   }
 };
+
 const getOrder = async (req, res) => {
   try {
     const { id, usertype } = jwt.verify(
       req.headers.authorization.split(' ')[1],
       process.env.JWTSECRET
     );
-    const { order_id } = req.params.id;
+    console.log(req.params)
+    const { order_id } = req.params;
+
     if (usertype !== 'user') res.status(401).send('ACCESS DENIED');
     else {
       const { rows } = await db.query(
@@ -59,43 +62,86 @@ const getOrder = async (req, res) => {
                 WHERE user_id = '${id}'
                 AND id = '${order_id}'`
       );
+
       if (rows.length > 0) {
-        res.status(200).json(rows);
+        const status = rows[0].status
+        
+        const productRows = await db.query(
+          `SELECT * FROM order_items
+                WHERE order_id = '${order_id}'`
+        )
+        
+        var products = []
+        var i
+        var billAmount = 0
+        for(i=0; i<productRows.rows.length; i++) {
+          const productDetails = await db.query(
+            `SELECT * FROM products
+                WHERE id = '${productRows.rows[i].product_id}'`
+          )
+          billAmount = billAmount + (productDetails.rows[0].price * productRows.rows[i].quantity)
+          products.push({
+            product_id: productRows.rows[i].product_id,
+            name: productDetails.rows[0].name,
+            rate: productDetails.rows[0].price,
+            quantity: productRows.rows[i].quantity,
+            totalAmount: productDetails.rows[0].price * productRows.rows[i].quantity
+          })
+        }
+
+        const orderDetails = {
+          order_id: order_id,
+          status: status,
+          products: products,
+          billAmount: billAmount
+        }
+        res.status(200).json(orderDetails);
       } else if (rows.length == 0)
-        res.status(200).json({ msg: `No order with id = '{$order_id}' yet` });
+        res.status(200).json({ msg: `No order with id = '${order_id}' yet` });
     }
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server error');
   }
 };
+
 const search = async (req, res) => {
   try {
     const { usertype } = jwt.verify(
       req.headers.authorization.split(' ')[1],
       process.env.JWTSECRET
     );
-    const { category_id, price, page, status } = req.query;
+    const { searchTerm, category_id, price, page, status, sortOrder } = req.query;
     if (usertype !== 'user') res.status(401).send('ACCESS DENIED');
     else {
-      const { rows } = await db.query(
-        `SELECT * FROM products 
-        WHERE category_id = '${category_id}'
-        AND price = '${price}'
-        AND status = '${status}'
-        ORDER BY id,
-        LIMIT 10 OFFSET ${10 * (page - 1)}`
-      );
+        const { rows } = await db.query(
+          `
+          WITH Data_CTE AS (
+          SELECT * FROM products 
+          WHERE ((name LIKE '%${searchTerm}%' 
+          OR description LIKE '%${searchTerm}%')
+          ${category_id ? 'AND category_id = \'' + category_id + '\') ' : ')'} ),
+          Count_CTE AS (
+            SELECT COUNT(*) AS totalCount FROM Data_CTE
+        )
+        SELECT * FROM Data_CTE
+        CROSS JOIN Count_CTE
+        ORDER BY ${price ? 'price' : (status ? 'status' : 'created_at')} ${sortOrder ? sortOrder : 'DESC'}
+        LIMIT 10 OFFSET ${10 * (page - 1)}
+        `
+        )
+      
       if (rows.length > 0) {
         res.status(200).json(rows);
       } else if (rows.length == 0)
-        res.status(200).json({ msg: `No order with given filters` });
+        res.status(200).json({ msg: `No products found` });
     }
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server error');
   }
 };
+
 const buy = async (req, res) => {
   try {
     const { user_id, usertype } = jwt.verify(
@@ -119,9 +165,12 @@ const buy = async (req, res) => {
     res.status(500).send('Server error');
   }
 };
+
+
+
 const addToCart = async (req, res) => {
   try {
-    const { user_id, usertype } = jwt.verify(
+      const { id, usertype } = jwt.verify(
       req.headers.authorization.split(' ')[1],
       process.env.JWTSECRET
     );
@@ -129,27 +178,31 @@ const addToCart = async (req, res) => {
     if (usertype !== 'user') res.status(401).send('ACCESS DENIED');
     else {
       const { rows } = await db.query(
-        `SELECT * from orders WHERE user_id='${user_id}' AND status='${ORDERING}'`
+        `SELECT * from orders WHERE user_id='${id}' AND status='ordering'`
       );
-      if (rows.length > 0) {
+      if (rows.length > 0) {                                    // If there is an active cart, add items to it
         const {
           data,
         } = await db.query(
-          `INSERT INTO orders (product_id,quantity) VALUES ($1,$2) WHERE status='${ORDERING}'`,
-          [product_id, quantity]
+          `INSERT INTO order_items (order_id, product_id, quantity) VALUES ($1,$2, $3)`,
+          [rows[0].id, product_id, quantity]
         );
         res.status(200).json(data);
-      } else if (rows.length == 0) {
+      } else  {                                                 // No active cart, need to create a new order
+        const orderID = ObjectId().toString()
         const {
           data,
         } = await db.query(
-          `INSERT INTO orders (id,user_id,product_id,quantity,status) VALUES ($1,$2,$3,$4,"ORDERING")`,
-          [ObjectId().toString(), user_id, product_id, quantity]
+          `INSERT INTO orders (id, user_id, status) VALUES ($1,$2,$3)`,
+          [orderID, id, 'ordering']         
+        );
+
+        const { itemData, } = await db.query( 
+        `INSERT INTO order_items (order_id, product_id, quantity) VALUES ($1,$2, $3)`,
+        [orderID, product_id, quantity]
         );
         res.status(200).json(data);
-      } else {
-        res.status(200).json('What to do ?');
-      }
+      } 
     }
   } catch (err) {
     console.error(err.message);
