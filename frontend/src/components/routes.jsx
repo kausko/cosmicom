@@ -17,7 +17,7 @@ export default function Routes() {
         <Route path='/merchant' component={Merchant} />
         <Route path='/shipper' component={Shipper} />
         <Route path='/user' component={User} />
-        <Route path='/my-order' component={Order} />
+        <Route path='/my-order/:order_id' component={Order} />
       </Switch>
     </BrowserRouter>
   );

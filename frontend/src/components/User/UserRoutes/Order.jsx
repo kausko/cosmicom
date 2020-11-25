@@ -20,9 +20,9 @@ import ShoppingCartIcon from '@material-ui/icons/ShoppingCart';
 import CheckIcon from '@material-ui/icons/Check';
 import FlightTakeoffIcon from '@material-ui/icons/FlightTakeoff';
 import FlightLandIcon from '@material-ui/icons/FlightLand';
-import { useHistory } from 'react-router-dom';
+import { useHistory, useParams } from 'react-router-dom';
 import Axios from 'axios';
-import { useContext } from 'react';
+import { useContext, useEffect } from 'react';
 import { ThemeContext } from '../../../context/useTheme';
 import { useSnackbar } from 'notistack';
 import { Menu } from '@material-ui/icons';
@@ -78,7 +78,7 @@ export default function Order() {
   const classes = useStyles();
   const [open, setOpen] = React.useState(false);
   const history = useHistory();
-
+  const [data, setData] = React.useState({});
   const apRef = React.useRef();
 
   const { dark, toggleTheme } = useContext(ThemeContext);
@@ -93,6 +93,24 @@ export default function Order() {
     setValue(newVal);
     apRef.current.onChangePage(e, 0);
   };
+  const order = async () => {
+    try {
+      const resp = await Axios.get(
+        `http://localhost:8000/users/order/5fbd0f0c44efad4994f4528d`,
+        {
+          headers: {
+            Authorization: `Bearer ${sessionStorage.getItem('token')}`,
+          },
+        }
+      );
+      console.log(resp.data);
+      setData(resp.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(order, []);
 
   const handleLogout = () => {
     sessionStorage.clear();
@@ -138,7 +156,7 @@ export default function Order() {
             component='div'
             mr={4}
           >
-            Order ID : safdd222441renjkask2
+            Order ID : 5fbd0f0c44efad4994f4528d
           </Typography>
           <TableContainer component={Paper}>
             <Table
@@ -156,7 +174,7 @@ export default function Order() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {rows.map((row) => (
+                {data.products.map((row) => (
                   <TableRow>
                     <TableCell component='th' scope='row'>
                       {row.product_id}
@@ -166,7 +184,7 @@ export default function Order() {
                     </TableCell>
                     <TableCell align='right'>{row.rate}</TableCell>
                     <TableCell align='right'>{row.quantity}</TableCell>
-                    <TableCell align='right'>{row.price}</TableCell>
+                    <TableCell align='right'>{row.totalAmount}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -203,7 +221,7 @@ export default function Order() {
           </Timeline>
           <hr style={{ opacity: '50%' }} />
           <h3 style={{ float: 'right', marginRight: '1rem' }}>
-            Total : ₹ 5000
+            Total : ₹ {data.billAmount}
           </h3>
         </Grid>
       </Grid>
