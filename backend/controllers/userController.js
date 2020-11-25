@@ -22,6 +22,9 @@ const getProfile = async (req, res) => {
   }
 }
 
+const updateProfile = async(req, res) => {
+
+}
 const getAllOrders = async (req, res) => {
   try {
     const { id, usertype } = jwt.verify(
@@ -114,7 +117,7 @@ const search = async (req, res) => {
     const { searchTerm, category_id, price, page, status, sortOrder } = req.query;
     if (usertype !== 'user') res.status(401).send('ACCESS DENIED');
     else {
-        const { rows } = await db.query(
+        const { rows } = await db.query( 
           `
           WITH Data_CTE AS (
           SELECT * FROM products 
@@ -144,29 +147,39 @@ const search = async (req, res) => {
 
 const buy = async (req, res) => {
   try {
-    const { user_id, usertype } = jwt.verify(
+    const { id, usertype } = jwt.verify(
       req.headers.authorization.split(' ')[1],
       process.env.JWTSECRET
     );
-    const { id } = req.params;
-    const { paymentMode, netAmt } = req.body;
+    const { order_id } = req.params;
+    const { paymentMode, netAmt, address } = req.body;
     if (usertype !== 'user') res.status(401).send('ACCESS DENIED');
     else {
-      const { rows } = await db.query(
-        `UPDATE ORDERS SET paymentMode = '${paymentMode}', netAmt = '${netAmt}', status = 'ORDERED' WHERE id = '${id}' AND user_id='${user_id}'`
-      );
-      if (rows.length > 0) {
-        res.status(200).json(rows);
-      } else if (rows.length == 0)
-        res.status(200).json({ msg: `No order with id = '{$order_id}' yet` });
+      const checkIfOrderExists = await db.query(
+        `SELECT * FROM orders where id = '${order_id}' and status = 'ordering'`
+      )
+      if(checkIfOrderExists.rows.length === 0)
+        res.status(400).send('Invalid order')
+      else {  
+        const userDetails = await db.query(
+          `SELECT * FROM users where id = '${id}'`
+        )
+        const shippers = await db.query(
+          `SELECT * FROM shippers WHERE country_code = '${userDetails.rows[0].country_code}' `
+        )
+
+        const randomShipperIndex = Math.floor(Math.random() * (shippers.rows.length));
+        const { rows } = await db.query(
+          `UPDATE ORDERS SET "paymentMode" = '${paymentMode}', "netAmt" = '${netAmt}', status = 'ordered', created_at = NOW(), shipper_id = '${shippers.rows[randomShipperIndex].id}', addr = '${address}' WHERE id = '${order_id}' AND user_id='${id}'`
+        );
+        res.status(200).send('Ordered');
+      }
     }
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server error');
   }
 };
-
-
 
 const addToCart = async (req, res) => {
   try {
@@ -211,6 +224,7 @@ const addToCart = async (req, res) => {
 };
 module.exports = {
   getProfile,
+  updateProfile,
   getAllOrders,
   getOrder,
   search,

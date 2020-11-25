@@ -16,9 +16,10 @@ router.get('/', auth, user.getProfile);
 router.get('/categories', auth, common.categories);
 router.get('/product/:id', auth, common.getProductDetails);
 router.get('/orders', auth, user.getAllOrders);
+router.get('/profile', auth, user.getProfile)
+router.put('/profile', auth, user.updateProfile);
 router.get('/order/:order_id', auth, user.getOrder);
-router.get('/order/search/', auth, user.getOrder);
-router.post('/buy/:order_id/', auth, user.search);
+router.post('/buy/:order_id/', auth, user.buy);
 router.post('/add-to-cart/', auth, user.addToCart);
 router.get('/search', auth, user.search);
 router.get('/:category_id/:page', auth, common.getProductsByCategory);
