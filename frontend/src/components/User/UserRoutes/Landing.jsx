@@ -10,6 +10,7 @@ import { useLocation } from 'react-router-dom';
 import Axios from 'axios';
 import { Pagination } from '@material-ui/lab';
 import { useSnackbar } from 'notistack';
+import SERVER_URI from '../../../config';
 
 // eslint-disable-next-line import/no-anonymous-default-export
 export default React.memo(({ page, setPage, handleSearch }) => {
@@ -23,7 +24,7 @@ export default React.memo(({ page, setPage, handleSearch }) => {
     if (location.search.includes('?page=')) {
       const page = parseInt(new URLSearchParams(location.search).get('page')) 
       Axios.get(
-        `http://localhost:8000/users/products/${page}`,
+        `${SERVER_URI}/users/products/${page}`,
         {
           headers: {
             "Authorization": `Bearer ${sessionStorage.getItem('token')}`
@@ -37,7 +38,7 @@ export default React.memo(({ page, setPage, handleSearch }) => {
     }
     else {
       Axios.get(
-        `http://localhost:8000/users/search${location.search}`,
+        `${SERVER_URI}/users/search${location.search}`,
         {
           headers: {
             "Authorization": `Bearer ${sessionStorage.getItem('token')}`
@@ -59,7 +60,7 @@ export default React.memo(({ page, setPage, handleSearch }) => {
     const count = window.prompt(`Select quantity of "${products[e.currentTarget.id].name}" to add to cart`)
     if (Number.isInteger(parseInt(count))) {
       Axios.post(
-        `http://localhost:8000/users/add-to-cart`,
+        `${SERVER_URI}/users/add-to-cart`,
         {
           product_id: products[e.currentTarget.id].id,
           quantity: parseInt(count)

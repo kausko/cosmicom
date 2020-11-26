@@ -20,6 +20,7 @@ import {
   KeyboardDatePicker,
 } from '@material-ui/pickers';
 import { useSnackbar } from 'notistack';
+import SERVER_URI from '../../config';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -85,7 +86,7 @@ export default function Register() {
 
   useEffect(() => {
     Axios.get(
-      'http://localhost:8000/countries'
+      `${SERVER_URI}/countries`
     )
     .then(res => {
       setCountries(res.data)
@@ -122,7 +123,7 @@ export default function Register() {
         }
 
         Axios.post(
-          "http://localhost:8000/register",
+          `${SERVER_URI}/register`,
           details,
           { headers: { 'Content-Type': 'application/json' } }
         )

@@ -29,6 +29,7 @@ import Axios from 'axios';
 import { useContext } from 'react';
 import { ThemeContext } from '../../context/useTheme';
 import { useSnackbar } from 'notistack';
+import SERVER_URI from '../../config';
 
 const useStyles = makeStyles((theme) => ({
   root: { flexGrow: 1 },
@@ -95,7 +96,7 @@ export default function ShipperNav() {
 
   const patchRow = (e, rowData) =>
     Axios.patch(
-      `http://localhost:8000/shipper/orders/${rowData.status === 'ordered'
+      `${SERVER_URI}/shipper/orders/${rowData.status === 'ordered'
         ? 'packed'
         : rowData.status === 'packed'
           ? 'dispatched'
@@ -118,7 +119,7 @@ export default function ShipperNav() {
     console.log(rowData);
     if (window.confirm('Do you want to cancel this order ?')) {
       Axios.patch(
-        `http://localhost:8000/shipper/orders/cancelled/${rowData.id}`,
+        `${SERVER_URI}/shipper/orders/cancelled/${rowData.id}`,
         {},
         {
           headers: {
@@ -192,7 +193,7 @@ export default function ShipperNav() {
             tableRef={apRef}
             data={(query) =>
               new Promise((resolve, reject) => {
-                let url = `http://localhost:8000/shipper/${value === 0
+                let url = `${SERVER_URI}/shipper/${value === 0
                   ? 'ordered'
                   : value === 1
                     ? 'packed'

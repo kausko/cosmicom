@@ -4,6 +4,7 @@ import Axios from 'axios'
 import { useSnackbar } from 'notistack'
 import React, { useEffect, useContext, useState, useCallback } from 'react'
 import { useHistory, useLocation } from 'react-router-dom'
+import SERVER_URI from '../../config'
 import { ThemeContext } from '../../context/useTheme'
 import Routes from './routes'
 
@@ -78,7 +79,7 @@ const UserLanding = () => {
     }
 
     const getProfile = () => Axios.get(
-        `http://localhost:8000/users/`,
+        `${SERVER_URI}/users/`,
         {
             headers: {
                 "Authorization": `Bearer ${sessionStorage.token}`
@@ -90,7 +91,7 @@ const UserLanding = () => {
     .finally(() => console.log(location))
 
     const getCategories = () =>
-    Axios.get('http://localhost:8000/employees/categories', {
+    Axios.get(`${SERVER_URI}/employees/categories`, {
       headers: {
         Authorization: `Bearer ${sessionStorage.getItem('token')}`,
         'Content-Type': 'application/json',

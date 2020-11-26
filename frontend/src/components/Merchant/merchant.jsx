@@ -5,6 +5,7 @@ import MaterialTable from 'material-table'
 import { useSnackbar } from 'notistack'
 import React, { useRef, useContext, useState, useEffect } from 'react'
 import { useHistory } from 'react-router-dom'
+import SERVER_URI from '../../config'
 import { ThemeContext } from '../../context/useTheme'
 
 const drawerWidth = 360;
@@ -78,7 +79,7 @@ export default function ClippedDrawer() {
 
     const getCategories = () =>
         Axios.get(
-            'http://localhost:8000/employees/categories',
+            `${SERVER_URI}/employees/categories`,
             {
                 headers: {
                     "Authorization": `Bearer ${sessionStorage.getItem('token')}`,
@@ -133,7 +134,7 @@ export default function ClippedDrawer() {
         setSubmitLoading(true)
         if (!!selectedProduct) {
             Axios.put(
-                `http://localhost:8000/merchants/${selectedProduct}`,
+                `${SERVER_URI}/merchants/${selectedProduct}`,
                 { ...product },
                 {
                     headers: {
@@ -151,7 +152,7 @@ export default function ClippedDrawer() {
         }
         else {
             Axios.post(
-                `http://localhost:8000/merchants/add-product`,
+                `${SERVER_URI}/merchants/add-product`,
                 {
                     ...product,
                     category_id: selectedCat.id
@@ -176,7 +177,7 @@ export default function ClippedDrawer() {
     const handleDelete = (e, data) => {
         if (window.confirm(`Are you sure you want to delete the product: ${data.name}?`)) {
             Axios.delete(
-                `http://localhost:8000/merchants/${data.id}`,
+                `${SERVER_URI}/merchants/${data.id}`,
                 {
                     headers: {
                         "Authorization": `Bearer ${sessionStorage.getItem('token')}`,
@@ -233,7 +234,7 @@ export default function ClippedDrawer() {
                         tableRef={tableRef}
                         data={
                             query => new Promise((resolve, reject) => {
-                                let url = `http://localhost:8000/merchants/${!!selectedCat.id ? selectedCat.id : 'products'}/${query.page + 1}`
+                                let url = `${SERVER_URI}/merchants/${!!selectedCat.id ? selectedCat.id : 'products'}/${query.page + 1}`
                                 let token = sessionStorage.getItem('token')
                                 Axios.get(url, {
                                     headers: {

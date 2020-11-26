@@ -44,6 +44,7 @@ import Axios from 'axios';
 import { useContext } from 'react';
 import { ThemeContext } from '../../context/useTheme';
 import { useSnackbar } from 'notistack';
+import SERVER_URI from '../../config';
 
 const useStyles = makeStyles((theme) => ({
   root: { flex: 1 },
@@ -119,7 +120,7 @@ export default function EmployeeNav() {
   };
 
   const getCategories = () =>
-    Axios.get('http://localhost:8000/employees/categories', {
+    Axios.get(`${SERVER_URI}/employees/categories`, {
       headers: {
         Authorization: `Bearer ${sessionStorage.getItem('token')}`,
         'Content-Type': 'application/json',
@@ -136,7 +137,7 @@ export default function EmployeeNav() {
 
   const patchRow = (e, rowData) =>
     Axios.patch(
-      `http://localhost:8000/employees/${value ? 'shippers' : 'merchants'}/${
+      `${SERVER_URI}/employees/${value ? 'shippers' : 'merchants'}/${
         rowData.id
       }`,
       null,
@@ -156,7 +157,7 @@ export default function EmployeeNav() {
   const deleteRow = (e, rowData, ref) => {
     if (window.confirm('Do you want to reject ' + rowData.name + ' ?'))
       Axios.delete(
-        `http://localhost:8000/employees/${value ? 'shippers' : 'merchants'}/${
+        `${SERVER_URI}/employees/${value ? 'shippers' : 'merchants'}/${
           rowData.id
         }`,
         {
@@ -191,7 +192,7 @@ export default function EmployeeNav() {
   };
 
   const submitCategory = () => {
-    Axios.post('http://localhost:8000/employees/categories', category, {
+    Axios.post(`${SERVER_URI}/employees/categories`, category, {
       headers: {
         Authorization: `Bearer ${sessionStorage.getItem('token')}`,
         'Content-Type': 'application/json',
@@ -207,7 +208,7 @@ export default function EmployeeNav() {
 
   const handleDelete = (child) => (e) => {
     if (window.confirm(`Delete category ${child.cat_name}?`)) {
-      Axios.delete(`http://localhost:8000/employees/categories/${child.id}`, {
+      Axios.delete(`${SERVER_URI}/employees/categories/${child.id}`, {
         headers: {
           Authorization: `Bearer ${sessionStorage.getItem('token')}`,
           'Content-Type': 'application/json',
@@ -306,7 +307,7 @@ export default function EmployeeNav() {
             tableRef={unRef}
             data={(query) =>
               new Promise((resolve, reject) => {
-                let url = `http://localhost:8000/employees/${
+                let url = `${SERVER_URI}/employees/${
                   value ? 'shippers' : 'merchants'
                 }/false/${query.page + 1}`;
                 let token = sessionStorage.getItem('token');
@@ -348,7 +349,7 @@ export default function EmployeeNav() {
             tableRef={apRef}
             data={(query) =>
               new Promise((resolve, reject) => {
-                let url = `http://localhost:8000/employees/${
+                let url = `${SERVER_URI}/employees/${
                   value ? 'shippers' : 'merchants'
                 }/true/${query.page + 1}`;
                 let token = sessionStorage.getItem('token');

@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const { Pool } = require('pg');
 const db = require('../db');
 const jwt = require('jsonwebtoken');
+require('dotenv').config()
 
 const shipperOrders = async (req, res) => {
   try {

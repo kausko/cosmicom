@@ -14,6 +14,7 @@ import { Brightness4, Brightness7 } from '@material-ui/icons'
 import { useSnackbar } from 'notistack'
 
 import Axios from 'axios';
+import SERVER_URI from '../../config';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -98,7 +99,7 @@ export default function Login() {
     }
     setLoading(true)
     Axios.post(
-      "http://localhost:8000/login",
+      `${SERVER_URI}/login`,
       details,
       {
         headers: {

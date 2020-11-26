@@ -3,6 +3,7 @@ import Axios from 'axios'
 import MaterialTable from 'material-table'
 import React from 'react'
 import { useHistory } from 'react-router-dom'
+import SERVER_URI from '../../../config'
 
 // eslint-disable-next-line import/no-anonymous-default-export
 export default () => {
@@ -26,7 +27,7 @@ export default () => {
                     title="My Orders"
                     data={query => new Promise((resolve, reject) => {
                         Axios.get(
-                            `http://localhost:8000/users/orders`,
+                            `${SERVER_URI}/users/orders`,
                             {
                                 headers: {
                                     "Authorization": `Bearer ${sessionStorage.getItem('token')}`

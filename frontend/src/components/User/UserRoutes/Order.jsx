@@ -25,6 +25,7 @@ import TimelineConnector from '@material-ui/lab/TimelineConnector';
 import TimelineContent from '@material-ui/lab/TimelineContent';
 import TimelineDot from '@material-ui/lab/TimelineDot';
 import { useSnackbar } from 'notistack';
+import SERVER_URI from '../../../config';
 
 export default function Order() {
 
@@ -48,7 +49,7 @@ export default function Order() {
   const handleSubmit = () => {
     setLoading(true)
     Axios.post(
-      `http://localhost:8000/users/buy/${id}`,
+      `${SERVER_URI}/users/buy/${id}`,
       {
         ...placeOrderData, netAmt: data.billAmount
       },
@@ -80,7 +81,7 @@ export default function Order() {
           title={data !== null ? "Order: " + data.order_id : "Loading..."}
           data={query => new Promise((resolve, reject) => {
             Axios.get(
-              `http://localhost:8000/users/order/${id}`,
+              `${SERVER_URI}/users/order/${id}`,
               {
                 headers: {
                   "Authorization": `Bearer ${sessionStorage.getItem('token')}`

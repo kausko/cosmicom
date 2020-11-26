@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const db = require('../db');
 const jwt = require('jsonwebtoken');
 const ObjectId = require('bson-objectid');
+require('dotenv').config()
 
 const login = async (req, res) => {
   try {
