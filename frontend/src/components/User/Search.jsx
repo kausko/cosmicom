@@ -3,6 +3,7 @@ import { Menu as MenuIcon } from '@material-ui/icons'
 import React, { useState } from 'react'
 import { useHistory } from 'react-router-dom'
 
+// eslint-disable-next-line import/no-anonymous-default-export
 export default ({ variant }) => {
 
     const [searchText, setSearchText] = useState('')

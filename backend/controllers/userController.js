@@ -22,9 +22,10 @@ const getProfile = async (req, res) => {
   }
 }
 
-const updateProfile = async(req, res) => {
+const updateProfile = async (req, res) => {
 
 }
+
 const getAllOrders = async (req, res) => {
   try {
     const { id, usertype } = jwt.verify(
@@ -38,10 +39,7 @@ const getAllOrders = async (req, res) => {
                 WHERE user_id = '${id}'
                 ORDER BY created_at DESC`
       );
-      if (rows.length > 0) {
-        res.status(200).json(rows);
-      } else if (rows.length == 0)
-        res.status(200).json({ msg: 'No products here yet' });
+      res.status(200).json(rows);
     }
   } catch (err) {
     console.error(err.message);
@@ -68,16 +66,16 @@ const getOrder = async (req, res) => {
 
       if (rows.length > 0) {
         const status = rows[0].status
-        
+
         const productRows = await db.query(
           `SELECT * FROM order_items
                 WHERE order_id = '${order_id}'`
         )
-        
+
         var products = []
         var i
         var billAmount = 0
-        for(i=0; i<productRows.rows.length; i++) {
+        for (i = 0; i < productRows.rows.length; i++) {
           const productDetails = await db.query(
             `SELECT * FROM products
                 WHERE id = '${productRows.rows[i].product_id}'`
@@ -117,8 +115,8 @@ const search = async (req, res) => {
     const { searchTerm, category_id, price, page, status, sortOrder } = req.query;
     if (usertype !== 'user') res.status(401).send('ACCESS DENIED');
     else {
-        const { rows } = await db.query( 
-          `
+      const { rows } = await db.query(
+        `
           WITH Data_CTE AS (
           SELECT * FROM products 
           WHERE ((name LIKE '%${searchTerm}%' 
@@ -132,12 +130,8 @@ const search = async (req, res) => {
         ORDER BY ${price ? 'price' : (status ? 'status' : 'created_at')} ${sortOrder ? sortOrder : 'DESC'}
         LIMIT 10 OFFSET ${10 * (page - 1)}
         `
-        )
-      
-      if (rows.length > 0) {
+      )
         res.status(200).json(rows);
-      } else if (rows.length == 0)
-        res.status(200).json({ msg: `No products found` });
     }
   } catch (err) {
     console.error(err.message);
@@ -158,9 +152,9 @@ const buy = async (req, res) => {
       const checkIfOrderExists = await db.query(
         `SELECT * FROM orders where id = '${order_id}' and status = 'ordering'`
       )
-      if(checkIfOrderExists.rows.length === 0)
+      if (checkIfOrderExists.rows.length === 0)
         res.status(400).send('Invalid order')
-      else {  
+      else {
         const userDetails = await db.query(
           `SELECT * FROM users where id = '${id}'`
         )
@@ -183,7 +177,7 @@ const buy = async (req, res) => {
 
 const addToCart = async (req, res) => {
   try {
-      const { id, usertype } = jwt.verify(
+    const { id, usertype } = jwt.verify(
       req.headers.authorization.split(' ')[1],
       process.env.JWTSECRET
     );
@@ -201,21 +195,21 @@ const addToCart = async (req, res) => {
           [rows[0].id, product_id, quantity]
         );
         res.status(200).json(data);
-      } else  {                                                 // No active cart, need to create a new order
+      } else {                                                 // No active cart, need to create a new order
         const orderID = ObjectId().toString()
         const {
           data,
         } = await db.query(
           `INSERT INTO orders (id, user_id, status) VALUES ($1,$2,$3)`,
-          [orderID, id, 'ordering']         
+          [orderID, id, 'ordering']
         );
 
-        const { itemData, } = await db.query( 
-        `INSERT INTO order_items (order_id, product_id, quantity) VALUES ($1,$2, $3)`,
-        [orderID, product_id, quantity]
+        const { itemData, } = await db.query(
+          `INSERT INTO order_items (order_id, product_id, quantity) VALUES ($1,$2, $3)`,
+          [orderID, product_id, quantity]
         );
         res.status(200).json(data);
-      } 
+      }
     }
   } catch (err) {
     console.error(err.message);

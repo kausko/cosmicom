@@ -14,10 +14,8 @@ router.use((req, res, next) => {
 });
 router.get('/', auth, user.getProfile);
 router.get('/categories', auth, common.categories);
-router.get('/product/:id', auth, common.getProductDetails);
+router.get('/products/:page', auth, common.getAllProducts)
 router.get('/orders', auth, user.getAllOrders);
-router.get('/profile', auth, user.getProfile)
-router.put('/profile', auth, user.updateProfile);
 router.get('/order/:order_id', auth, user.getOrder);
 router.post('/buy/:order_id/', auth, user.buy);
 router.post('/add-to-cart/', auth, user.addToCart);

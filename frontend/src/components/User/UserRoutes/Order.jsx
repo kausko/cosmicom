@@ -1,18 +1,14 @@
 import React from 'react';
 import { makeStyles } from '@material-ui/styles';
 import {
-  AppBar,
-  Toolbar,
-  IconButton,
-  Typography,
-  Tab,
-  Tabs,
+  Button,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Grid,
-  useMediaQuery,
-  CssBaseline,
-  Hidden,
-  BottomNavigation,
-  BottomNavigationAction,
+  TextField,
 } from '@material-ui/core';
 import MaterialTable from 'material-table';
 import { ExitToApp, Brightness7, Brightness4 } from '@material-ui/icons';
@@ -22,199 +18,130 @@ import FlightTakeoffIcon from '@material-ui/icons/FlightTakeoff';
 import FlightLandIcon from '@material-ui/icons/FlightLand';
 import { useHistory, useParams } from 'react-router-dom';
 import Axios from 'axios';
-import { useContext, useEffect } from 'react';
-import { ThemeContext } from '../../../context/useTheme';
-import { useSnackbar } from 'notistack';
-import { Menu } from '@material-ui/icons';
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableCell from '@material-ui/core/TableCell';
-import TableContainer from '@material-ui/core/TableContainer';
-import TableHead from '@material-ui/core/TableHead';
-import TableRow from '@material-ui/core/TableRow';
-import Paper from '@material-ui/core/Paper';
 import Timeline from '@material-ui/lab/Timeline';
 import TimelineItem from '@material-ui/lab/TimelineItem';
 import TimelineSeparator from '@material-ui/lab/TimelineSeparator';
 import TimelineConnector from '@material-ui/lab/TimelineConnector';
 import TimelineContent from '@material-ui/lab/TimelineContent';
 import TimelineDot from '@material-ui/lab/TimelineDot';
-const useStyles = makeStyles((theme) => ({
-  root: { flexGrow: 1 },
-  appBar: {
-    top: 'auto',
-    bottom: 0,
-  },
-  title: {
-    flex: '1 1 100%',
-  },
-  nested: { paddingLeft: theme.spacing(4) },
-  tableGrid: {
-    marginTop: theme.spacing(10),
-    [theme.breakpoints.up('sm')]: {
-      paddingLeft: theme.spacing(1),
-      paddingRight: theme.spacing(1),
-    },
-  },
-  table: {
-    minWidth: 650,
-  },
-  spacing: 8,
-}));
-
-function createData(product_id, name, rate, quantity, price) {
-  return { product_id, name, rate, quantity, price };
-}
-
-const rows = [
-  createData('45gxvd3afas', 'Frozen yoghurt', 159, 6.0, 24),
-  createData('45gxvd3afas', 'Ice cream sandwich', 237, 9.0, 37),
-  createData('45gxvd3afas', 'Eclair', 262, 16.0, 24),
-  createData('45gxvd3afas', 'Cupcake', 305, 3.7, 67),
-  createData('45gxvd3afas', 'Gingerbread', 356, 16.0, 49),
-];
+import { useSnackbar } from 'notistack';
 
 export default function Order() {
-  const classes = useStyles();
+
+  const [data, setData] = React.useState(null);
   const [open, setOpen] = React.useState(false);
-  const history = useHistory();
-  const [data, setData] = React.useState({});
-  const apRef = React.useRef();
+  const [loading, setLoading] = React.useState(false)
+  const [placeOrderData, setPlaceOrderData] = React.useState({
+    paymentMode: '',
+    address: ''
+  })
 
-  const { dark, toggleTheme } = useContext(ThemeContext);
+  const toggleOpen = () => setOpen(!open)
 
-  const smUp = useMediaQuery((theme) => theme.breakpoints.up('sm'));
+  const history = useHistory()
+  const { id } = useParams()
 
-  const [value, setValue] = React.useState(0);
+  const { enqueueSnackbar } = useSnackbar()
 
-  const { enqueueSnackbar } = useSnackbar();
-  const toggleDrawer = () => setOpen(!open);
-  const handleTabChange = (e, newVal) => {
-    setValue(newVal);
-    apRef.current.onChangePage(e, 0);
-  };
-  const order = async () => {
-    try {
-      const resp = await Axios.get(
-        `http://localhost:8000/users/order/5fbd0f0c44efad4994f4528d`,
-        {
-          headers: {
-            Authorization: `Bearer ${sessionStorage.getItem('token')}`,
-          },
+  const handleChange = e => setPlaceOrderData({ ...placeOrderData, [e.target.id]: e.target.value })
+
+  const handleSubmit = () => {
+    setLoading(true)
+    Axios.post(
+      `http://localhost:8000/users/buy/${id}`,
+      {
+        ...placeOrderData, netAmt: data.billAmount
+      },
+      {
+        headers: {
+          "Authorization": `Bearer ${sessionStorage.getItem('token')}`
         }
-      );
-      console.log(resp.data);
-      setData(resp.data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  useEffect(order, []);
-
-  const handleLogout = () => {
-    sessionStorage.clear();
-    history.push('/');
-  };
+      }
+    )
+    .then(() => history.push("/user/orders"))
+    .catch(err => enqueueSnackbar(err.message, { variant: "error", anchorOrigin: { vertical: 'bottom', horizontal: 'center' }}))
+    .finally(() => setLoading(false))
+  }
 
   return (
-    <Grid>
-      <CssBaseline />
-      <AppBar position='fixed' color='inherit'>
-        <Toolbar>
-          <IconButton
-            edge='start'
-            className={classes.menuButton}
-            color='inherit'
-            aria-label='menu'
-            onClick={toggleDrawer}
-          >
-            <Menu />
-          </IconButton>
-          <Typography variant='h6' className={classes.title}>
-            My Orders
-          </Typography>
-          <IconButton edge='end' color='inherit' onClick={toggleTheme}>
-            {dark ? <Brightness7 /> : <Brightness4 />}
-          </IconButton>
-          <IconButton edge='end' color='inherit' onClick={handleLogout}>
-            <ExitToApp />
-          </IconButton>
-        </Toolbar>
-      </AppBar>
-      <Grid
-        container={smUp}
-        justify='space-evenly'
-        alignItems='center'
-        className={classes.tableGrid}
-      >
+    <Grid container spacing={1}>
+      <Grid item xs={12}>
+        <MaterialTable
+          columns={[
+            { title: 'Product Name', field: 'name', filtering: false, sorting: false },
+            { title: 'Rate (₹)', field: 'rate', filtering: false, sorting: false },
+            { title: 'Quantity', field: 'quantity', filtering: false, sorting: false },
+            { title: 'Total (₹)', field: 'totalAmount', filtering: false, sorting: false }
+          ]}
+          options={{
+            search: false,
+            paging: false
+          }}
+          title={data !== null ? "Order: " + data.order_id : "Loading..."}
+          data={query => new Promise((resolve, reject) => {
+            Axios.get(
+              `http://localhost:8000/users/order/${id}`,
+              {
+                headers: {
+                  "Authorization": `Bearer ${sessionStorage.getItem('token')}`
+                }
+              }
+            )
+              .then(res => {
+                setData(res.data)
+                return resolve({
+                  data: res.data.products
+                })
+              })
+              .catch(err => reject(err.message))
+          })}
+          actions={data !== null && [
+            {
+              icon: "add",
+              isFreeAction: true,
+              tooltip: "Place Order",
+              hidden: data.status !== "ordering",
+              onClick: toggleOpen
+            }
+          ]}
+        />
+      </Grid>
+      {
+        data !== null &&
+
         <Grid item xs={12}>
-          <Typography
-            className={classes.title}
-            variant='h6'
-            id='tableTitle'
-            component='div'
-            mr={4}
-          >
-            Order ID : 5fbd0f0c44efad4994f4528d
-          </Typography>
-          <TableContainer component={Paper}>
-            <Table
-              stickyHeader
-              className={classes.table}
-              aria-label='simple table'
-            >
-              <TableHead>
-                <TableRow>
-                  <TableCell>Product ID</TableCell>
-                  <TableCell>Product Name</TableCell>
-                  <TableCell align='right'>Rate&nbsp;(₹)</TableCell>
-                  <TableCell align='right'>Quantity</TableCell>
-                  <TableCell align='right'>Price&nbsp;(₹)</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {data.products.map((row) => (
-                  <TableRow>
-                    <TableCell component='th' scope='row'>
-                      {row.product_id}
-                    </TableCell>
-                    <TableCell component='th' scope='row'>
-                      {row.name}
-                    </TableCell>
-                    <TableCell align='right'>{row.rate}</TableCell>
-                    <TableCell align='right'>{row.quantity}</TableCell>
-                    <TableCell align='right'>{row.totalAmount}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
           <Timeline>
             <TimelineItem>
               <TimelineSeparator>
-                <TimelineDot variant='outlined' />
+                <TimelineDot variant='outlined' color={data.status === "ordering" ? "primary" : "grey"} />
+                <TimelineConnector />
+              </TimelineSeparator>
+              <TimelineContent>Ordering</TimelineContent>
+            </TimelineItem>
+            <TimelineItem>
+              <TimelineSeparator>
+                <TimelineDot variant='outlined' color={data.status === "ordered" ? "primary" : "grey"} />
                 <TimelineConnector />
               </TimelineSeparator>
               <TimelineContent>Ordered</TimelineContent>
             </TimelineItem>
             <TimelineItem>
               <TimelineSeparator>
-                <TimelineDot variant='outlined' color='primary' />
+                <TimelineDot variant='outlined' color={data.status === "packed" ? "primary" : "grey"} />
                 <TimelineConnector />
               </TimelineSeparator>
               <TimelineContent>Packed</TimelineContent>
             </TimelineItem>
             <TimelineItem>
               <TimelineSeparator>
-                <TimelineDot variant='outlined' color='secondary' />
+                <TimelineDot variant='outlined' color={data.status === "dispatched" ? "primary" : "grey"} />
                 <TimelineConnector />
               </TimelineSeparator>
               <TimelineContent>Dispatched</TimelineContent>
             </TimelineItem>
             <TimelineItem>
               <TimelineSeparator>
-                <TimelineDot variant='outlined' />
+                <TimelineDot variant='outlined' color={data.status === "delivered" ? "primary" : "grey"} />
               </TimelineSeparator>
               <TimelineContent>Delivered</TimelineContent>
             </TimelineItem>
@@ -224,7 +151,38 @@ export default function Order() {
             Total : ₹ {data.billAmount}
           </h3>
         </Grid>
-      </Grid>
+      }
+      <Dialog open={open} onClose={toggleOpen}>
+        <DialogTitle>Provide additional details before confirming order</DialogTitle>
+        <DialogContent>
+          <TextField
+            label="How would you like to pay?"
+            id="paymentMode"
+            value={placeOrderData.paymentMode}
+            onChange={handleChange}
+            fullWidth
+            margin="normal"
+            variant="outlined"
+          />
+          <TextField
+            label="Address"
+            id="address"
+            value={placeOrderData.address}
+            onChange={handleChange}
+            fullWidth
+            margin="normal"
+            variant="outlined"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button color="secondary" onClick={toggleOpen}>
+            Cancel
+          </Button>
+          <Button color="primary" onClick={handleSubmit} startIcon={loading && <CircularProgress/>}>
+            Submit
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Grid>
   );
 }

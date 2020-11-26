@@ -109,7 +109,7 @@ export default function Login() {
     .then(res => {
       enqueueSnackbar('Login Successful', { variant: 'success'})
       sessionStorage.setItem('token', res.data.token)
-      history.push(`/${details.usertype}`)
+      history.push(`/${details.usertype}` + (details.usertype === "user" ? '?page=1' : ''))
     })
     .catch(err => {
       console.log(err)

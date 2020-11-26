@@ -228,7 +228,6 @@ export default function EmployeeNav() {
           <Icon className={classes.menuButton}>{child.cat_icon}</Icon>
           <ListItemText primary={child.cat_name} />
           <ListItemSecondaryAction>
-            res.data[0]
             <Tooltip title='Add Child'>
               <IconButton edge='start' onClick={handleAdd(child)}>
                 <AddCircle />
