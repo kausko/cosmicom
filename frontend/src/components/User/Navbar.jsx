@@ -1,12 +1,11 @@
-import { AppBar, Avatar, Button, CssBaseline, Divider, Drawer, FilledInput, FormControl, Grid, Icon, IconButton, Input, InputAdornment, InputLabel, List, ListItem, ListItemAvatar, ListItemIcon, ListItemSecondaryAction, ListItemText, ListSubheader, makeStyles, SwipeableDrawer, Switch, TextField, Toolbar, Typography } from '@material-ui/core'
-import { AttachMoney, Brightness4, Brightness7, Cake, Cancel, Category, DateRange, Dialpad, ExitToApp, FilterList, Menu, SearchOutlined, ShoppingCart, TrendingDown, TrendingUp } from '@material-ui/icons'
+import { AppBar, Avatar, CssBaseline, Divider, Drawer, Icon, IconButton, InputAdornment, List, ListItem, ListItemAvatar, ListItemIcon, ListItemSecondaryAction, ListItemText, makeStyles, SwipeableDrawer, Switch, TextField, Toolbar} from '@material-ui/core'
+import { AttachMoney, Brightness4, Brightness7, Cake, Cancel,  DateRange, Dialpad, ExitToApp, FilterList, Home, SearchOutlined, ShoppingCart, TrendingDown, TrendingUp } from '@material-ui/icons'
 import Axios from 'axios'
 import { useSnackbar } from 'notistack'
 import React, { useEffect, useContext, useState, useCallback } from 'react'
 import { useHistory, useLocation } from 'react-router-dom'
 import { ThemeContext } from '../../context/useTheme'
 import Routes from './routes'
-import Search from './Search'
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -47,7 +46,7 @@ const defaultSelectedCat = {
     id: ''
 }
 
-export default function UserLanding() {
+const UserLanding = () => {
 
     const [profile, setProfile] = useState(null)
     const [categories, setCategories] = useState([])
@@ -139,23 +138,23 @@ export default function UserLanding() {
     )
 
     const handleSearch = e => {
+        history.push("/user?" +
+            'searchTerm=' + query +
+            '&category_id=' + selectedCat.id +
+            (orderByPrice ? '&price=true' : '') +
+            '&sortOrder=' + (increasing ? 'ASC' : 'DESC') +
+            '&page=' + page
+        )
+    }
+
+    const cancelSearch = e => {
         e.preventDefault()
-        if (!location.search.includes('?page=')) {
-            setQuery('')
-            setSelectedCat(defaultSelectedCat)
-            setOrderByPrice(false)
-            setIncreasing(false)
-            history.push('/user?page=' + page)
-        }
-        else {
-            history.push("/user?" +
-                'searchTerm=' + query +
-                '&category_id=' + selectedCat.id +
-                (orderByPrice ? '&price=true' : '') +
-                '&sortOrder=' + (increasing ? 'ASC' : 'DESC') +
-                '&page=' + page
-            )
-        }
+        setPage(1)
+        setQuery('')
+        setSelectedCat(defaultSelectedCat)
+        setOrderByPrice(false)
+        setIncreasing(false)
+        history.push('/user?page=1')
     }
 
     const handlePageChange = useCallback((thispage) => {
@@ -189,12 +188,18 @@ export default function UserLanding() {
                         value={query}
                         onChange={e => setQuery(e.target.value)}
                         InputProps={{
-                            endAdornment:
+                            startAdornment:
                             <InputAdornment position="end">
-                                <IconButton edge="end" color="inherit" onClick={handleSearch}>
-                                {!location.search.includes('?page=') ? <Cancel/> : <SearchOutlined/>}
+                                <IconButton edge="start" color="inherit" onClick={handleSearch} disabled={!query.length}>
+                                    <SearchOutlined/>
                                 </IconButton>
-                            </InputAdornment>
+                            </InputAdornment>,
+                            endAdornment: query.length > 0 &&
+                            <InputAdornment position="end">
+                                <IconButton edge="start" color="inherit" onClick={cancelSearch} disabled={!query.length}>
+                                    <Cancel/>
+                                </IconButton>
+                            </InputAdornment>,
                         }}
                     />
                     <IconButton edge="end" color="inherit" onClick={toggleRightDrawer}>
@@ -242,7 +247,18 @@ export default function UserLanding() {
                                 secondary={`Gender: ${profile.gender}`}
                             />
                         </ListItem>
-                        <ListItem button onClick={() => history.push('user/orders')}>
+                        <ListItem button onClick={() => {
+                            setPage(1)
+                            history.push('/user?page=1')
+                        }}>
+                            <ListItemIcon>
+                                <Home/>
+                            </ListItemIcon>
+                            <ListItemText
+                                primary="Home"
+                            />
+                        </ListItem>
+                        <ListItem button onClick={() => history.push('/user/orders')}>
                             <ListItemIcon>
                                 <ShoppingCart/>
                             </ListItemIcon>
@@ -339,3 +355,5 @@ export default function UserLanding() {
         </div>
     )
 }
+
+export default React.memo(UserLanding)
