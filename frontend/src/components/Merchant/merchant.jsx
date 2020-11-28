@@ -96,6 +96,7 @@ export default function ClippedDrawer() {
     useEffect(getCategories, [])
 
     const handleSelectCat = child => e => {
+        toggleDrawer()
         if (child.children.length === 0) {
             setSelectedCat(child)
         }

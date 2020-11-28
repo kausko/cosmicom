@@ -1,4 +1,4 @@
-import { AppBar, Avatar, CssBaseline, Divider, Drawer, Icon, IconButton, InputAdornment, List, ListItem, ListItemAvatar, ListItemIcon, ListItemSecondaryAction, ListItemText, makeStyles, SwipeableDrawer, Switch, TextField, Toolbar} from '@material-ui/core'
+import { AppBar, Avatar, CssBaseline, Divider, Icon, IconButton, InputAdornment, List, ListItem, ListItemAvatar, ListItemIcon, ListItemSecondaryAction, ListItemText, makeStyles, SwipeableDrawer, Switch, TextField, Toolbar} from '@material-ui/core'
 import { AttachMoney, Brightness4, Brightness7, Cake, Cancel,  DateRange, Dialpad, ExitToApp, FilterList, Home, SearchOutlined, ShoppingCart, TrendingDown, TrendingUp } from '@material-ui/icons'
 import Axios from 'axios'
 import { useSnackbar } from 'notistack'
@@ -250,6 +250,7 @@ const UserLanding = () => {
                         </ListItem>
                         <ListItem button onClick={() => {
                             setPage(1)
+                            toggleLeftDrawer()
                             history.push('/user?page=1')
                         }}>
                             <ListItemIcon>
@@ -259,7 +260,10 @@ const UserLanding = () => {
                                 primary="Home"
                             />
                         </ListItem>
-                        <ListItem button onClick={() => history.push('/user/orders')}>
+                        <ListItem button onClick={() => {
+                            toggleLeftDrawer()
+                            history.push('/user/orders')
+                        }}>
                             <ListItemIcon>
                                 <ShoppingCart/>
                             </ListItemIcon>
@@ -288,7 +292,7 @@ const UserLanding = () => {
             }
             {
                 categories &&
-                <Drawer
+                <SwipeableDrawer
                     open={rightDrawer}
                     anchor='right'
                     onOpen={toggleRightDrawer}
@@ -351,7 +355,7 @@ const UserLanding = () => {
                         </ListItem>
                         <NestedList children={categories}/>
                     </List>
-                </Drawer>
+                </SwipeableDrawer>
             }
         </div>
     )
