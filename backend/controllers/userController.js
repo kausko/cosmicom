@@ -159,7 +159,7 @@ const buy = async (req, res) => {
           `SELECT * FROM users where id = '${id}'`
         )
         const shippers = await db.query(
-          `SELECT * FROM shippers WHERE country_code = '${userDetails.rows[0].country_code}' `
+          `SELECT * FROM shippers WHERE country_code = '${userDetails.rows[0].country_code}' AND status = 't'`
         )
 
         const randomShipperIndex = Math.floor(Math.random() * (shippers.rows.length));
