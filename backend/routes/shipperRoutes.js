@@ -13,5 +13,6 @@ router.use((req, res, next) => {
 });
 
 router.get('/:status/:page', auth, order.shipperOrders);
+router.get('/:status/', auth, order.shipperAllOrders);
 router.patch('/orders/:status/:id', auth, order.shipperOrderUpdate);
 module.exports = router;

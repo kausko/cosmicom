@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs');
 const { Pool } = require('pg');
 const db = require('../db');
 const jwt = require('jsonwebtoken');
-require('dotenv').config()
+require('dotenv').config();
 
 const shipperOrders = async (req, res) => {
   try {
@@ -61,7 +61,41 @@ const shipperOrderUpdate = async (req, res) => {
     res.status(500).send('Server error');
   }
 };
+
+const shipperAllOrders = async (req, res) => {
+  try {
+    const { id, usertype } = jwt.verify(
+      req.headers.authorization.split(' ')[1],
+      process.env.JWTSECRET
+    );
+
+    const status = req.params.status;
+    if (usertype !== 'shipper') res.status(401).send('ACCESS DENIED');
+    else {
+      const { rows } = await db.query(
+        `WITH Data_CTE AS ( 
+          SELECT users.name,users.email,orders.id,status,"netAmt","paymentMode"
+          FROM orders LEFT JOIN users 
+          ON users.id = orders.user_id 
+          WHERE
+          status='${status}' AND 
+          shipper_id='${id}' 
+      ),
+      Count_CTE AS (
+          SELECT COUNT(*) AS totalCount FROM Data_CTE
+      )
+      SELECT * FROM Data_CTE
+      CROSS JOIN Count_CTE`
+      );
+      res.status(200).json(rows);
+    }
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
+};
 module.exports = {
   shipperOrders,
   shipperOrderUpdate,
+  shipperAllOrders,
 };
