@@ -9,20 +9,21 @@ const addProduct = async (req, res) => {
       req.headers.authorization.split(' ')[1],
       process.env.JWTSECRET
     );
-    const { name, price, status, category_id, description } = req.body;
+    const { name, price, quantity, category_id, description } = req.body;
     if (usertype !== 'merchant') res.status(401).send('ACCESS DENIED');
     else {
       const result = await db.query(
-        `INSERT INTO products (id,name,price,status,category_id,merchant_id,created_at,description) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+        `INSERT INTO products (id,name,price,status,category_id,merchant_id,created_at,description,quantity) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
         [
             ObjectId().toString(), 
             name, 
             price, 
-            status, 
+            "Available", 
             category_id, 
             id, 
             new Date().toISOString().split('T')[0], 
-            description
+            description,
+            quantity
         ]
       );
       res.status(200).json('Product added successfully');
@@ -40,15 +41,16 @@ const editProduct = async (req, res) => {
       process.env.JWTSECRET
     );
     const product_id = req.params.id;
-    const { name, price, status, description } = req.body;
+    const { name, price, quantity, description } = req.body;
     if (usertype !== 'merchant') res.status(401).send('ACCESS DENIED');
     else {
       const result = await db.query(
         `UPDATE products 
                  SET name = '${name}',
                  price = '${price}',
-                 status = '${status}',
-                 description = '${description}'
+                 status = 'Available',
+                 description = '${description}',
+                 quantity = '${quantity}'
                 WHERE id = '${product_id}'
                 AND merchant_id = '${id}'`
       );

@@ -55,15 +55,18 @@ export default React.memo(({ page, setPage, handleSearch }) => {
   useEffect(getProducts ,[location])
 
   const handleClick = e => {
-    // console.log(e.currentTarget.id)
-    // setProduct(products[e.currentTarget.id])
-    const count = window.prompt(`Select quantity of "${products[e.currentTarget.id].name}" to add to cart`)
+    const targetid = e.currentTarget.id;
+    const count = window.prompt(`Select quantity of "${products[e.currentTarget.id].name}" to add to cart. (ONLY ${products[e.currentTarget.id].quantity} are available in stock)`)
     if (Number.isInteger(parseInt(count))) {
+      const finalCount = Math.min(parseInt(count), products[e.currentTarget.id].quantity);
+      if (finalCount !== parseInt(count))
+        enqueueSnackbar(`Only ${finalCount} products were available, and added to cart!`, { variant: "warning", anchorOrigin: {vertical: 'bottom', horizontal: 'center' }})
       Axios.post(
         `${SERVER_URI}/users/add-to-cart`,
         {
           product_id: products[e.currentTarget.id].id,
-          quantity: parseInt(count)
+          quantity: finalCount,
+          remainder: products[e.currentTarget.id].quantity - finalCount
         },
         {
           headers: {
@@ -71,7 +74,15 @@ export default React.memo(({ page, setPage, handleSearch }) => {
           }
         }
       )
-      .then(() => enqueueSnackbar("Added to cart", { variant: "success", anchorOrigin: {vertical: 'bottom', horizontal: 'center' }}))
+      .then(() => {
+        enqueueSnackbar("Added to cart", { variant: "success", anchorOrigin: {vertical: 'bottom', horizontal: 'center' }})
+        let tempProducts = [...products]
+        tempProducts[targetid] = {
+          ...tempProducts[targetid],
+          quantity: products[targetid].quantity - finalCount
+        }
+        setProducts(tempProducts)
+      })
       .catch(err => enqueueSnackbar(err.message, { variant: "error", anchorOrigin: { vertical: 'bottom', horizontal: 'center' }}))
     }
   }
@@ -82,13 +93,19 @@ export default React.memo(({ page, setPage, handleSearch }) => {
       {
         products.map((product, index) =>
           <Grid key={index} item xs={12} md={4}>
-            <Card style={{height: '100%', width: '100%'}}>
+            <Card style={{
+              height: '100%', 
+              width: '100%',
+              backgroundColor: product.quantity < 0 && 'rgba(255,255,255,0.5)'
+            }}>
               <CardActionArea
                 id={index}
-                onClick={handleClick}
+                onClick={product.quantity > 0 && handleClick}
               >
               <CardMedia
-                style={{height: 300}}
+                style={{
+                  height: 300
+                }}
                 image={`https://picsum.photos/seed/${Math.random()}/500`}
               />
               <CardHeader

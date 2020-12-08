@@ -31,7 +31,7 @@ const useStyles = makeStyles((theme) => ({
 const defaultProduct = {
     name: '',
     price: '',
-    status: '',
+    quantity: '',
     description: ''
 }
 
@@ -273,8 +273,8 @@ export default function ClippedDrawer() {
                                 sorting: false,
                             },
                             {
-                                title: 'Status',
-                                field: 'status',
+                                title: 'Quantity',
+                                field: 'quantity',
                                 filtering: false,
                                 sorting: false
                             }
@@ -288,7 +288,7 @@ export default function ClippedDrawer() {
                                     setProduct({
                                         name: data.name,
                                         price: data.price,
-                                        status: data.status,
+                                        quantity: data.quantity,
                                         description: data.description
                                     })
                                     toggleModal()
@@ -336,6 +336,7 @@ export default function ClippedDrawer() {
                                     value={product[name]}
                                     onChange={handleProductChange}
                                     multiline={name === 'description'}
+                                    type={name === "quantity" ? "number" : "text"}
                                 />
                             )
                         }

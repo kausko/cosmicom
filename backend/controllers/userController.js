@@ -181,9 +181,10 @@ const addToCart = async (req, res) => {
       req.headers.authorization.split(' ')[1],
       process.env.JWTSECRET
     );
-    const { product_id, quantity } = req.body;
+    const { product_id, quantity, remainder } = req.body;
     if (usertype !== 'user') res.status(401).send('ACCESS DENIED');
     else {
+      await db.query(`UPDATE products set quantity=${remainder} where id='${product_id}'`)
       const { rows } = await db.query(
         `SELECT * from orders WHERE user_id='${id}' AND status='ordering'`
       );
